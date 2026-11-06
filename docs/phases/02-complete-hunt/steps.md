@@ -1,0 +1,78 @@
+# Phase 02 — Complete Hunt Loop
+
+> **Status:** Not started  
+> **Goal:** Turn the prototype into one fully playable hunt with monster behavior, rewards, and inventory.  
+> **Dependencies:** [Phase 01](../01-combat-prototype/steps.md) complete  
+> **Next:** [Phase 03 — Progression](../03-progression/steps.md)
+
+## Deliverable
+
+A complete forest-monster hunt from selection through typing combat to committed results and a persistent materials inventory. The player can win, lose, or abandon without double rewards or unclear state.
+
+## Steps
+
+### 1. Hunt selection and entry
+
+- [ ] Build hub and Hunt Board screens for one available map.
+- [ ] Display the monster's name, difficulty indicator, and possible materials.
+- [ ] Pressing Start begins a clean new encounter with full player HP.
+- [ ] Assign a unique `huntId` for each encounter.
+- [ ] Keep one authoritative hunt controller for the encounter state.
+
+### 2. Defensive typing
+
+- [ ] Add an enemy attack telegraph with a countdown and defensive word.
+- [ ] Prioritize defense over the active attack word.
+- [ ] Completing defense in time prevents/reduces the hit as designed.
+- [ ] Timeout or mistakes that prevent completing defense apply damage **once**.
+- [ ] Return to attack word input after defense resolves.
+- [ ] Verify deadlines freeze on pause and restore correctly on resume.
+
+### 3. Combat depth
+
+- [ ] Implement combo damage with a sensible cap.
+- [ ] Add clear visual feedback for flawless words, combo resets, and defense.
+- [ ] Add a first optional part-break prompt with a gauge.
+- [ ] Ensure a part can break at most once per hunt.
+- [ ] Use injected clock and random source for deterministic unit tests.
+- [ ] Add a simple monster behavior difference (e.g., slow slime vs aggressive boar) without duplicating controller logic.
+
+### 4. Loot and experience
+
+- [ ] Define a few stable `material.*` catalog IDs and drop rates.
+- [ ] On victory, calculate XP and material drops from a seeded/injected RNG.
+- [ ] Award bonus material when a qualifying part was broken.
+- [ ] Defeat and abandon give no monster materials in MVP.
+- [ ] Show victory/defeat/abandon result summary with correct numbers.
+
+### 5. Transactional local persistence
+
+- [ ] Implement `hunt_history` and `inventory_materials` database tables.
+- [ ] Implement `finalize_hunt` in the Tauri/Rust persistence layer.
+- [ ] Save history, XP, inventory, and any unlock updates atomically.
+- [ ] Make duplicate `huntId` settlement return prior result without paying twice.
+- [ ] Display only rewards confirmed by the committed save result.
+- [ ] Add a simple Inventory screen showing stored materials.
+
+### 6. Verification
+
+- [ ] Tests: defense success/failure, prompt priority, repeated part-break input.
+- [ ] Tests: dropped materials within configured ranges and seeded reproducibility.
+- [ ] Tests: double settlement does not double XP or inventory.
+- [ ] Tests: failure during a transaction rolls back all affected changes.
+- [ ] Manual: win, defeat, abandon, restart, Alt+Tab, and confirm all persisted values.
+- [ ] Playtest one complete hunt repeatedly and adjust pace before adding more systems.
+
+## Definition of done
+
+The player starts a hunt, fights with attack/defense words, can optionally break a monster part, wins or loses, sees a results screen, and returns to a persistent inventory. Restarting shows the same saved material quantities; retrying a settlement cannot duplicate rewards.
+
+## Explicitly defer
+
+Skill tree, full crafting/equipment, remaining monsters/maps, advanced boss phases, gacha, and art polish.
+
+## End-of-phase notes
+
+- **Most confusing combat prompt:** _To fill in_
+- **Observed session duration:** _To fill in_
+- **Balance changes needed:** _To fill in_
