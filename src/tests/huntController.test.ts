@@ -60,6 +60,7 @@ describe('huntController', () => {
 
     expect(controller.getState().status).toBe('active');
     expect(controller.getState().prompt?.word).toBe(mossSlime.attackWords[0]);
+    expect(controller.getState().prompt?.kind).toBe('attack');
     expect(controller.drainEvents()).toEqual([{ type: 'HUNT_STARTED' }]);
 
     controller.start();
@@ -100,43 +101,106 @@ describe('huntController', () => {
     expect(controller.drainEvents()).toEqual([{ type: 'MISTYPE', expected }]);
   });
 
-  it('applies one monster attack when the cadence elapses', () => {
+  it('telegraphs a defense word when the cadence elapses', () => {
     const { controller, advance } = setup();
     controller.start();
     controller.drainEvents();
 
     advance(mossSlime.attackCadenceMs - 1);
     controller.tick();
-    expect(controller.getState().playerHp).toBe(hunterDefinition.baseMaxHp);
+    expect(controller.getState().prompt?.kind).toBe('attack');
     expect(controller.drainEvents()).toEqual([]);
 
     advance(1);
     controller.tick();
+    const state = controller.getState();
+    expect(state.prompt?.kind).toBe('defense');
+    expect(state.prompt?.word).toBe(mossSlime.defenseWords![0]);
+    expect(state.defenseDeadlineMs).not.toBeNull();
+    expect(eventsOfType(controller.drainEvents(), 'DEFENSE_STARTED')).toHaveLength(1);
+  });
+
+  it('avoids damage when the defense word is completed in time', () => {
+    const { controller, advance } = setup();
+    controller.start();
+    controller.drainEvents();
+
+    advance(mossSlime.attackCadenceMs);
+    controller.tick();
+    controller.drainEvents();
+
+    const defenseWord = controller.getState().prompt?.word ?? '';
+    for (const char of defenseWord) {
+      controller.typeCharacter(char);
+    }
+
+    const events = controller.drainEvents();
+    expect(eventsOfType(events, 'DEFENSE_SUCCESS')).toHaveLength(1);
+    expect(eventsOfType(events, 'MONSTER_ATTACK')).toHaveLength(0);
+    expect(controller.getState().playerHp).toBe(hunterDefinition.baseMaxHp);
+    expect(controller.getState().prompt?.kind).toBe('attack');
+    expect(controller.getState().defenseDeadlineMs).toBeNull();
+  });
+
+  it('applies damage exactly once when the defense deadline expires', () => {
+    const { controller, advance } = setup();
+    controller.start();
+    controller.drainEvents();
+
+    advance(mossSlime.attackCadenceMs);
+    controller.tick();
+    controller.drainEvents();
+
+    advance(mossSlime.defenseWindowMs!);
+    controller.tick();
+
+    const events = controller.drainEvents();
+    expect(eventsOfType(events, 'DEFENSE_FAILED')).toHaveLength(1);
+    expect(eventsOfType(events, 'MONSTER_ATTACK')).toHaveLength(1);
     expect(controller.getState().playerHp).toBe(
       hunterDefinition.baseMaxHp - mossSlime.attackDamage,
     );
-    expect(controller.drainEvents()).toEqual([
-      { type: 'MONSTER_ATTACK', damage: mossSlime.attackDamage },
-    ]);
+    expect(controller.getState().prompt?.kind).toBe('attack');
 
     controller.tick();
-    expect(controller.drainEvents()).toEqual([]);
+    const trailing = controller.drainEvents();
+    expect(eventsOfType(trailing, 'MONSTER_ATTACK')).toHaveLength(0);
   });
 
-  it('does not queue several attacks after a long stall', () => {
+  it('does not queue several defenses after a long stall', () => {
     const { controller, advance } = setup();
     controller.start();
+    controller.drainEvents();
 
     advance(mossSlime.attackCadenceMs * 10);
     controller.tick();
 
-    expect(controller.getState().playerHp).toBe(
-      hunterDefinition.baseMaxHp - mossSlime.attackDamage,
-    );
+    expect(eventsOfType(controller.drainEvents(), 'DEFENSE_STARTED')).toHaveLength(1);
+    expect(controller.getState().playerHp).toBe(hunterDefinition.baseMaxHp);
+
+    advance(mossSlime.defenseWindowMs!);
+    controller.tick();
     expect(eventsOfType(controller.drainEvents(), 'MONSTER_ATTACK')).toHaveLength(1);
   });
 
-  it('freezes the attack deadline while paused and restores it on resume', () => {
+  it('keeps defense progress on a mistype and reports the expected letter', () => {
+    const { controller, advance } = setup();
+    controller.start();
+    controller.drainEvents();
+
+    advance(mossSlime.attackCadenceMs);
+    controller.tick();
+    controller.drainEvents();
+
+    const expected = controller.getState().prompt?.word.charAt(0);
+    controller.typeCharacter('x');
+
+    expect(controller.getState().combo).toBe(0);
+    expect(controller.drainEvents()).toEqual([{ type: 'MISTYPE', expected }]);
+    expect(controller.getState().prompt?.kind).toBe('defense');
+  });
+
+  it('freezes the defense deadline while paused and restores it on resume', () => {
     const { controller, advance } = setup();
     controller.start();
     advance(3000);
@@ -148,11 +212,17 @@ describe('huntController', () => {
     expect(controller.getState().playerHp).toBe(hunterDefinition.baseMaxHp);
 
     controller.resume();
+    expect(controller.drainEvents()).toEqual([{ type: 'RESUMED' }]);
+
     advance(mossSlime.attackCadenceMs - 3000 - 1);
     controller.tick();
     expect(controller.getState().playerHp).toBe(hunterDefinition.baseMaxHp);
 
     advance(1);
+    controller.tick();
+    expect(controller.getState().prompt?.kind).toBe('defense');
+
+    advance(mossSlime.defenseWindowMs!);
     controller.tick();
     expect(controller.getState().playerHp).toBe(
       hunterDefinition.baseMaxHp - mossSlime.attackDamage,
@@ -182,7 +252,7 @@ describe('huntController', () => {
   });
 
   it('settles victory exactly once', () => {
-    const { controller } = setup({ ...mossSlime, hp: 5 });
+    const { controller } = setup({ ...mossSlime, hp: 5, defenseWords: [] });
     controller.start();
     controller.drainEvents();
 
@@ -203,9 +273,11 @@ describe('huntController', () => {
     controller.start();
     controller.drainEvents();
 
-    // 30 HP at 8 damage per hit: the fourth hit defeats.
+    // Each cadence starts a defense that times out, dealing one hit.
     for (let hit = 1; hit <= 4; hit += 1) {
       advance(mossSlime.attackCadenceMs);
+      controller.tick();
+      advance(mossSlime.defenseWindowMs!);
       controller.tick();
     }
 
@@ -232,5 +304,93 @@ describe('huntController', () => {
 
     expect(controller.getState().status).toBe('abandoned');
     expect(controller.getState().prompt).toBeNull();
+  });
+
+  it('starts a break opportunity after a defense resolves', () => {
+    const { controller, advance } = setup();
+    controller.start();
+    controller.drainEvents();
+
+    advance(mossSlime.attackCadenceMs);
+    controller.tick();
+    controller.drainEvents();
+
+    advance(mossSlime.defenseWindowMs!);
+    controller.tick();
+    controller.drainEvents();
+
+    controller.tick();
+    const events = controller.drainEvents();
+    expect(eventsOfType(events, 'BREAK_STARTED')).toHaveLength(1);
+    expect(controller.getState().prompt?.kind).toBe('break');
+    expect(controller.getState().prompt?.word).toBe('crown');
+  });
+
+  it('breaks a part after two completed break words', () => {
+    const { controller, advance } = setup();
+    controller.start();
+    controller.drainEvents();
+
+    // First break opportunity.
+    advance(mossSlime.attackCadenceMs);
+    controller.tick();
+    controller.drainEvents();
+    advance(mossSlime.defenseWindowMs!);
+    controller.tick();
+    controller.drainEvents();
+    controller.tick();
+    controller.drainEvents();
+
+    const firstWord = controller.getState().prompt?.word ?? '';
+    for (const char of firstWord) {
+      controller.typeCharacter(char);
+    }
+    const firstEvents = controller.drainEvents();
+    expect(eventsOfType(firstEvents, 'BREAK_PROGRESS')).toHaveLength(1);
+    expect(controller.getState().part?.gauge).toBe(1);
+    expect(controller.getState().part?.broken).toBe(false);
+    expect(controller.getState().prompt?.kind).toBe('attack');
+
+    // Second break opportunity.
+    advance(mossSlime.attackCadenceMs);
+    controller.tick();
+    controller.drainEvents();
+    advance(mossSlime.defenseWindowMs!);
+    controller.tick();
+    controller.drainEvents();
+    controller.tick();
+    controller.drainEvents();
+
+    const secondWord = controller.getState().prompt?.word ?? '';
+    for (const char of secondWord) {
+      controller.typeCharacter(char);
+    }
+    const secondEvents = controller.drainEvents();
+    expect(eventsOfType(secondEvents, 'PART_BROKEN')).toHaveLength(1);
+    expect(controller.getState().part?.broken).toBe(true);
+    expect(controller.getState().part?.gauge).toBe(2);
+  });
+
+  it('loses a break opportunity when a defense interrupts it', () => {
+    const { controller, advance } = setup();
+    controller.start();
+    controller.drainEvents();
+
+    advance(mossSlime.attackCadenceMs);
+    controller.tick();
+    controller.drainEvents();
+    advance(mossSlime.defenseWindowMs!);
+    controller.tick();
+    controller.drainEvents();
+    controller.tick();
+    controller.drainEvents(); // break starts
+
+    // Next defense cadence interrupts the break.
+    advance(mossSlime.attackCadenceMs);
+    controller.tick();
+    const events = controller.drainEvents();
+    expect(eventsOfType(events, 'BREAK_LOST')).toHaveLength(1);
+    expect(eventsOfType(events, 'DEFENSE_STARTED')).toHaveLength(1);
+    expect(controller.getState().part?.gauge).toBe(0);
   });
 });

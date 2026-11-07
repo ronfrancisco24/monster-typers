@@ -15,7 +15,9 @@ function huntWith(word: string, overrides: Partial<HuntState> = {}): HuntState {
     monsterHp: 100,
     monsterMaxHp: 100,
     combo: 0,
-    prompt: { id: 'prompt-1', word, cursor: 0, mistyped: false },
+    defenseDeadlineMs: null,
+    part: null,
+    prompt: { id: 'prompt-1', word, cursor: 0, mistyped: false, kind: 'attack' },
     ...overrides,
   };
 }

@@ -60,6 +60,37 @@ export class HuntScene extends Phaser.Scene {
         this.time.delayedCall(700, () => this.hitText.setText(''));
       } else if (event.type === 'MISTYPE') {
         this.cameras.main.shake(140, 0.006);
+      } else if (event.type === 'DEFENSE_STARTED') {
+        this.monster.setFillStyle(0xfb923c);
+        this.tweens.add({
+          targets: this.monster,
+          scale: 1.15,
+          duration: 120,
+          yoyo: true,
+        });
+        this.hitText.setText('Defend!');
+      } else if (event.type === 'DEFENSE_SUCCESS') {
+        this.monster.setFillStyle(0x22c55e);
+        this.hitText.setText('Blocked');
+        this.time.delayedCall(700, () => this.hitText.setText(''));
+      } else if (event.type === 'DEFENSE_FAILED') {
+        this.monster.setFillStyle(0xf97316);
+      } else if (event.type === 'BREAK_STARTED') {
+        this.monster.setFillStyle(0xa855f7);
+        this.tweens.add({
+          targets: this.monster,
+          scale: 1.12,
+          duration: 120,
+          yoyo: true,
+        });
+        this.hitText.setText('Break!');
+      } else if (event.type === 'BREAK_PROGRESS') {
+        this.hitText.setText('Hit!');
+        this.time.delayedCall(400, () => this.hitText.setText(''));
+      } else if (event.type === 'PART_BROKEN') {
+        this.monster.setFillStyle(0x4b5563);
+        this.hitText.setText('Broken');
+        this.time.delayedCall(900, () => this.hitText.setText(''));
       } else if (event.type === 'VICTORY') {
         this.monster.setFillStyle(0x4b5563);
         this.hitText.setText('Victory');
@@ -72,8 +103,10 @@ export class HuntScene extends Phaser.Scene {
 
   applyState(state: HuntState): void {
     if (state.status === 'ready' || state.status === 'active') {
-      this.hunter.setFillStyle(0x38bdf8);
-      this.monster.setFillStyle(0xf97316);
+      if (state.prompt?.kind !== 'defense' && state.prompt?.kind !== 'break') {
+        this.hunter.setFillStyle(0x38bdf8);
+        this.monster.setFillStyle(0xf97316);
+      }
     }
     if (state.status === 'paused') {
       this.hunter.setAlpha(0.7);
@@ -81,6 +114,9 @@ export class HuntScene extends Phaser.Scene {
     } else {
       this.hunter.setAlpha(1);
       this.monster.setAlpha(1);
+    }
+    if (state.status === 'ready') {
+      this.hitText.setText('');
     }
   }
 }

@@ -4,13 +4,14 @@ import { loadGameSave } from '../../persistence/gameRepository';
 import { mossSlime } from '../../content/monsters';
 import { hunterDefinition } from '../../content/hunter';
 import { createHuntController, type HuntController } from '../../game/controller/huntController';
+import type { MonsterDefinition } from '../../game/domain/types';
 
 type Flash = 'hit' | 'miss' | 'monster' | null;
 
-function makeController(): HuntController {
+function makeController(monster: MonsterDefinition): HuntController {
   return createHuntController({
     huntId: crypto.randomUUID(),
-    monster: mossSlime,
+    monster,
     playerMaxHp: hunterDefinition.baseMaxHp,
     baseAttackDamage: hunterDefinition.baseAttackDamage,
     now: () => performance.now(),
@@ -22,14 +23,26 @@ function hpPercent(value: number, max: number): string {
   return `${Math.max(0, Math.min(100, (value / max) * 100))}%`;
 }
 
-export default function HuntScreen() {
-  const [controller, setController] = useState(makeController);
+export default function HuntScreen({
+  monster: initialMonster = mossSlime,
+  onReturnToHub,
+}: {
+  monster?: MonsterDefinition;
+  onReturnToHub?: () => void;
+}) {
+  const [monster] = useState(initialMonster);
+  const [controller, setController] = useState(() => makeController(monster));
   const [state, setState] = useState(controller.getState());
   const [flash, setFlash] = useState<Flash>(null);
   const [hunterLevel, setHunterLevel] = useState(1);
+  const [flawlessFlash, setFlawlessFlash] = useState(false);
+  const [comboLostFlash, setComboLostFlash] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const phaserRef = useRef<PhaserViewportHandle>(null);
   const flashTimer = useRef<number | null>(null);
+  const flawlessTimer = useRef<number | null>(null);
+  const comboLostTimer = useRef<number | null>(null);
+  const prevComboRef = useRef(0);
 
   const triggerFlash = (kind: Exclude<Flash, null>) => {
     setFlash(kind);
@@ -43,19 +56,44 @@ export default function HuntScreen() {
     const events = controller.drainEvents();
     const last = events[events.length - 1];
     if (last !== undefined) {
-      if (last.type === 'PLAYER_ATTACK') triggerFlash('hit');
-      else if (last.type === 'MISTYPE') triggerFlash('miss');
-      else if (last.type === 'MONSTER_ATTACK') triggerFlash('monster');
+      if (last.type === 'PLAYER_ATTACK') {
+        triggerFlash('hit');
+        if (last.flawless) {
+          setFlawlessFlash(true);
+          if (flawlessTimer.current !== null) window.clearTimeout(flawlessTimer.current);
+          flawlessTimer.current = window.setTimeout(() => setFlawlessFlash(false), 900);
+        }
+      } else if (last.type === 'MISTYPE') {
+        triggerFlash('miss');
+        if (prevComboRef.current > 0) {
+          setComboLostFlash(true);
+          if (comboLostTimer.current !== null) window.clearTimeout(comboLostTimer.current);
+          comboLostTimer.current = window.setTimeout(() => setComboLostFlash(false), 900);
+        }
+      } else if (last.type === 'MONSTER_ATTACK') {
+        triggerFlash('monster');
+      } else if (last.type === 'DEFENSE_STARTED') {
+        triggerFlash('monster');
+      } else if (last.type === 'DEFENSE_SUCCESS') {
+        triggerFlash('hit');
+      } else if (last.type === 'DEFENSE_FAILED') {
+        triggerFlash('miss');
+      } else if (last.type === 'PART_BROKEN') {
+        triggerFlash('hit');
+      }
     }
     phaserRef.current?.applyEvents(events);
     const next = controller.getState();
     phaserRef.current?.applyState(next);
+    prevComboRef.current = state.combo;
     setState(next);
   };
 
   useEffect(() => {
     return () => {
       if (flashTimer.current !== null) window.clearTimeout(flashTimer.current);
+      if (flawlessTimer.current !== null) window.clearTimeout(flawlessTimer.current);
+      if (comboLostTimer.current !== null) window.clearTimeout(comboLostTimer.current);
     };
   }, []);
 
@@ -126,15 +164,19 @@ export default function HuntScreen() {
   }
 
   function replay() {
-    setController(makeController());
+    setController(makeController(monster));
   }
 
   const prompt = state.prompt;
+  const isDefense = prompt?.kind === 'defense';
+  const isBreak = prompt?.kind === 'break';
+  const defenseRemainingMs =
+    state.defenseDeadlineMs !== null ? Math.max(0, state.defenseDeadlineMs - performance.now()) : 0;
 
   return (
     <section className={`hunt hunt--${state.status}`}>
       <header className="hud-top">
-        <span className="monster-name">{mossSlime.name}</span>
+        <span className="monster-name">{monster.name}</span>
         <span className="combo">{state.combo > 0 ? `Combo x${state.combo}` : ''}</span>
       </header>
 
@@ -159,6 +201,21 @@ export default function HuntScreen() {
         </div>
       </section>
 
+      {state.part !== null && (
+        <section className="part-row">
+          <span className="part-row__label">{state.part.name}</span>
+          <div className="part-row__bar" role="progressbar" aria-valuenow={state.part.gauge} aria-valuemax={state.part.threshold}>
+            <div
+              className={`part-row__fill ${state.part.broken ? 'part-row__fill--broken' : ''}`}
+              style={{ width: `${Math.min(100, (state.part.gauge / state.part.threshold) * 100)}%` }}
+            />
+          </div>
+          <span className="part-row__value">
+            {state.part.broken ? 'Broken' : `${state.part.gauge}/${state.part.threshold}`}
+          </span>
+        </section>
+      )}
+
       {state.status === 'ready' && (
         <section className="panel">
           <p>Hunter level {hunterLevel}</p>
@@ -172,6 +229,18 @@ export default function HuntScreen() {
       {(state.status === 'active' || state.status === 'paused') && prompt !== null && (
         <section className="word-area">
           <PhaserViewport ref={phaserRef} width={640} height={160} />
+          {isDefense && (
+            <div className="defense-banner">
+              <span className="defense-banner__label">Defend</span>
+              <span className="defense-banner__countdown">{(defenseRemainingMs / 1000).toFixed(1)}s</span>
+            </div>
+          )}
+          {isBreak && (
+            <div className="break-banner">
+              <span className="break-banner__label">Break: {state.part?.name}</span>
+              <span className="break-banner__hint">Type to break the part</span>
+            </div>
+          )}
           <div className={`word ${flash === 'miss' ? 'word--shake' : ''} ${flash === 'hit' ? 'word--hit' : ''}`}>
             {prompt.word.split('').map((char, index) => {
               const done = index < prompt.cursor;
@@ -186,6 +255,8 @@ export default function HuntScreen() {
               );
             })}
           </div>
+          {flawlessFlash && <div className="feedback feedback--flawless">Flawless!</div>}
+          {comboLostFlash && <div className="feedback feedback--combo-lost">Combo lost</div>}
           <input
             ref={inputRef}
             className="typing-input"
@@ -228,10 +299,18 @@ export default function HuntScreen() {
       {state.status === 'victory' && (
         <div className="overlay overlay--victory">
           <h2>Victory</h2>
-          <p>The slime is defeated.</p>
-          <button type="button" className="btn btn--primary" onClick={replay}>
-            Replay
-          </button>
+          <p>The {monster.name} is defeated.</p>
+          {state.part?.broken && <p className="overlay__bonus">Part broken: {state.part.name}</p>}
+          <div className="controls">
+            <button type="button" className="btn btn--primary" onClick={replay}>
+              Replay
+            </button>
+            {onReturnToHub && (
+              <button type="button" className="btn" onClick={onReturnToHub}>
+                Return to Hub
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -239,9 +318,16 @@ export default function HuntScreen() {
         <div className="overlay overlay--defeat">
           <h2>Defeat</h2>
           <p>You were knocked out.</p>
-          <button type="button" className="btn btn--primary" onClick={replay}>
-            Replay
-          </button>
+          <div className="controls">
+            <button type="button" className="btn btn--primary" onClick={replay}>
+              Replay
+            </button>
+            {onReturnToHub && (
+              <button type="button" className="btn" onClick={onReturnToHub}>
+                Return to Hub
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -249,9 +335,16 @@ export default function HuntScreen() {
         <div className="overlay">
           <h2>Abandoned</h2>
           <p>No rewards were awarded.</p>
-          <button type="button" className="btn btn--primary" onClick={replay}>
-            Replay
-          </button>
+          <div className="controls">
+            <button type="button" className="btn btn--primary" onClick={replay}>
+              Replay
+            </button>
+            {onReturnToHub && (
+              <button type="button" className="btn" onClick={onReturnToHub}>
+                Return to Hub
+              </button>
+            )}
+          </div>
         </div>
       )}
     </section>

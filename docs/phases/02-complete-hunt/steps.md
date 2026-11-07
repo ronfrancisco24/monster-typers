@@ -1,7 +1,7 @@
 # Phase 02 — Complete Hunt Loop
 
-> **Status:** Not started  
-> **Goal:** Turn the prototype into one fully playable hunt with monster behavior, rewards, and inventory.  
+> **Status:** In progress
+> **Goal:** Turn the prototype into one fully playable hunt with monster behavior, rewards, and inventory.
 > **Dependencies:** [Phase 01](../01-combat-prototype/steps.md) complete  
 > **Next:** [Phase 03 — Progression](../03-progression/steps.md)
 
@@ -13,29 +13,29 @@ A complete forest-monster hunt from selection through typing combat to committed
 
 ### 1. Hunt selection and entry
 
-- [ ] Build hub and Hunt Board screens for one available map.
-- [ ] Display the monster's name, difficulty indicator, and possible materials.
-- [ ] Pressing Start begins a clean new encounter with full player HP.
-- [ ] Assign a unique `huntId` for each encounter.
-- [ ] Keep one authoritative hunt controller for the encounter state.
+- [x] Build hub and Hunt Board screens for one available map.
+- [x] Display the monster's name, difficulty indicator, and possible materials.
+- [x] Pressing Start begins a clean new encounter with full player HP.
+- [x] Assign a unique `huntId` for each encounter.
+- [x] Keep one authoritative hunt controller for the encounter state.
 
 ### 2. Defensive typing
 
-- [ ] Add an enemy attack telegraph with a countdown and defensive word.
-- [ ] Prioritize defense over the active attack word.
-- [ ] Completing defense in time prevents/reduces the hit as designed.
-- [ ] Timeout or mistakes that prevent completing defense apply damage **once**.
-- [ ] Return to attack word input after defense resolves.
-- [ ] Verify deadlines freeze on pause and restore correctly on resume.
+- [x] Add an enemy attack telegraph with a countdown and defensive word.
+- [x] Prioritize defense over the active attack word.
+- [x] Completing defense in time prevents/reduces the hit as designed.
+- [x] Timeout or mistakes that prevent completing defense apply damage **once**.
+- [x] Return to attack word input after defense resolves.
+- [x] Verify deadlines freeze on pause and restore correctly on resume.
 
 ### 3. Combat depth
 
-- [ ] Implement combo damage with a sensible cap.
-- [ ] Add clear visual feedback for flawless words, combo resets, and defense.
-- [ ] Add a first optional part-break prompt with a gauge.
-- [ ] Ensure a part can break at most once per hunt.
-- [ ] Use injected clock and random source for deterministic unit tests.
-- [ ] Add a simple monster behavior difference (e.g., slow slime vs aggressive boar) without duplicating controller logic.
+- [x] Implement combo damage with a sensible cap.
+- [x] Add clear visual feedback for flawless words, combo resets, and defense.
+- [x] Add a first optional part-break prompt with a gauge.
+- [x] Ensure a part can break at most once per hunt.
+- [x] Use injected clock and random source for deterministic unit tests.
+- [x] Add a simple monster behavior difference (e.g., slow slime vs aggressive boar) without duplicating controller logic.
 
 ### 4. Loot and experience
 

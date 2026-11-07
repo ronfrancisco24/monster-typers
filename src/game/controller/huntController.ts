@@ -1,5 +1,5 @@
 import { applyTypedCharacter } from '../domain/typing';
-import type { HuntEvent, HuntState, MonsterDefinition } from '../domain/types';
+import type { HuntEvent, HuntState, MonsterDefinition, PartState } from '../domain/types';
 
 export type HuntControllerOptions = {
   huntId: string;
@@ -21,9 +21,11 @@ export type HuntController = {
   pause: () => void;
   resume: () => void;
   abandon: () => void;
-  /** Call from the render loop; resolves a due monster attack. */
+  /** Call from the render loop; resolves a due monster attack, defense deadline, or break opportunity. */
   tick: () => void;
 };
+
+const LETTER = /^[a-z]$/i;
 
 function pickWord(
   pool: readonly string[],
@@ -34,9 +36,23 @@ function pickWord(
   const index = Math.min(candidates.length - 1, Math.floor(random() * candidates.length));
   const word = candidates[index];
   if (word === undefined) {
-    throw new Error('Monster has no attack words');
+    throw new Error('Monster has no words');
   }
   return word;
+}
+
+function hasDefense(monster: MonsterDefinition): boolean {
+  return (monster.defenseWords?.length ?? 0) > 0;
+}
+
+function hasBreak(monster: MonsterDefinition): boolean {
+  return monster.breakPart !== undefined;
+}
+
+function makePart(monster: MonsterDefinition): PartState | null {
+  const bp = monster.breakPart;
+  if (bp === undefined) return null;
+  return { id: bp.id, name: bp.name, gauge: 0, threshold: bp.threshold, broken: false };
 }
 
 /**
@@ -52,6 +68,12 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
   if (monster.attackCadenceMs <= 0 || monster.attackWords.length === 0) {
     throw new Error('Hunt requires an attack cadence and at least one attack word');
   }
+  if (hasDefense(monster) && (monster.defenseWindowMs === undefined || monster.defenseWindowMs <= 0)) {
+    throw new Error('Hunt requires a defense window when defense words are present');
+  }
+  if (hasBreak(monster) && (monster.breakPart!.words.length === 0 || monster.breakPart!.threshold <= 0 || monster.breakPart!.intervalMs <= 0)) {
+    throw new Error('Hunt requires valid break part data when a break part is present');
+  }
 
   let state: HuntState = {
     huntId,
@@ -64,25 +86,107 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
     monsterMaxHp: monster.hp,
     combo: 0,
     prompt: null,
+    defenseDeadlineMs: null,
+    part: makePart(monster),
   };
   let events: HuntEvent[] = [];
   let nextMonsterAttackAtMs = 0;
+  let nextBreakAtMs: number | null = null;
   let pausedAtMs: number | null = null;
   let promptCount = 0;
   let lastWord: string | null = null;
+  let defenseDeadlineAtMs: number | null = null;
 
   const emit = (event: HuntEvent) => {
     events.push(event);
   };
 
-  const nextPrompt = (): void => {
+  const nextAttackPrompt = (): void => {
     promptCount += 1;
     const word = pickWord(monster.attackWords, lastWord, random);
     lastWord = word;
     state = {
       ...state,
-      prompt: { id: `prompt-${promptCount}`, word, cursor: 0, mistyped: false },
+      prompt: { id: `prompt-${promptCount}`, word, cursor: 0, mistyped: false, kind: 'attack' },
+      defenseDeadlineMs: null,
     };
+  };
+
+  const applyMonsterAttack = (time: number): void => {
+    const playerHp = Math.max(0, state.playerHp - monster.attackDamage);
+    nextMonsterAttackAtMs = time + monster.attackCadenceMs;
+    state = { ...state, playerHp };
+    emit({ type: 'MONSTER_ATTACK', damage: monster.attackDamage });
+
+    if (playerHp === 0) {
+      state = { ...state, status: 'defeat', prompt: null, defenseDeadlineMs: null };
+      emit({ type: 'DEFEAT' });
+    }
+  };
+
+  const resolveDefense = (success: boolean, time: number): void => {
+    const word = state.prompt?.word ?? '';
+    defenseDeadlineAtMs = null;
+
+    if (success) {
+      emit({ type: 'DEFENSE_SUCCESS', word });
+    } else {
+      const playerHp = Math.max(0, state.playerHp - monster.attackDamage);
+      state = { ...state, playerHp };
+      emit({ type: 'DEFENSE_FAILED', damage: monster.attackDamage });
+      emit({ type: 'MONSTER_ATTACK', damage: monster.attackDamage });
+
+      if (playerHp === 0) {
+        state = { ...state, status: 'defeat', prompt: null, defenseDeadlineMs: null };
+        emit({ type: 'DEFEAT' });
+        return;
+      }
+    }
+
+    nextMonsterAttackAtMs = time + monster.attackCadenceMs;
+    nextAttackPrompt();
+  };
+
+  const startDefense = (time: number): void => {
+    // Defense interrupts an in-progress break opportunity.
+    if (state.prompt?.kind === 'break' && state.part !== null && !state.part.broken) {
+      emit({ type: 'BREAK_LOST', partId: state.part.id });
+      nextBreakAtMs = time + (monster.breakPart?.intervalMs ?? 0);
+    }
+
+    if (!hasDefense(monster)) {
+      applyMonsterAttack(time);
+      return;
+    }
+    const pool = monster.defenseWords ?? [];
+    const word = pickWord(pool, null, random);
+    promptCount += 1;
+    const windowMs = monster.defenseWindowMs ?? 3000;
+    const deadline = time + windowMs;
+    defenseDeadlineAtMs = deadline;
+    state = {
+      ...state,
+      prompt: { id: `prompt-${promptCount}`, word, cursor: 0, mistyped: false, kind: 'defense' },
+      defenseDeadlineMs: deadline,
+    };
+    emit({ type: 'DEFENSE_STARTED', word });
+  };
+
+  const startBreak = (time: number): void => {
+    const bp = monster.breakPart;
+    if (bp === undefined || state.part === null || state.part.broken) {
+      nextBreakAtMs = null;
+      return;
+    }
+    const word = pickWord(bp.words, null, random);
+    promptCount += 1;
+    nextBreakAtMs = null;
+    state = {
+      ...state,
+      prompt: { id: `prompt-${promptCount}`, word, cursor: 0, mistyped: false, kind: 'break' },
+      defenseDeadlineMs: null,
+    };
+    emit({ type: 'BREAK_STARTED', partId: bp.id, partName: bp.name, word });
   };
 
   return {
@@ -100,7 +204,8 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
       }
       state = { ...state, status: 'active' };
       nextMonsterAttackAtMs = now() + monster.attackCadenceMs;
-      nextPrompt();
+      nextBreakAtMs = hasBreak(monster) ? now() + (monster.breakPart?.intervalMs ?? 0) : null;
+      nextAttackPrompt();
       emit({ type: 'HUNT_STARTED' });
     },
 
@@ -108,6 +213,77 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
       if (state.status !== 'active') {
         return;
       }
+
+      // Defense takes priority over every other prompt.
+      if (state.prompt?.kind === 'defense') {
+        const prompt = state.prompt;
+        if (!LETTER.test(char)) {
+          return;
+        }
+        const c = char.toLowerCase();
+        const expected = prompt.word.charAt(prompt.cursor).toLowerCase();
+
+        if (c !== expected) {
+          state = { ...state, combo: 0, prompt: { ...prompt, mistyped: true } };
+          emit({ type: 'MISTYPE', expected });
+          return;
+        }
+
+        const cursor = prompt.cursor + 1;
+        if (cursor < prompt.word.length) {
+          state = { ...state, prompt: { ...prompt, cursor } };
+          return;
+        }
+
+        resolveDefense(true, now());
+        return;
+      }
+
+      // Break prompt: progress the part gauge, never deals damage.
+      if (state.prompt?.kind === 'break') {
+        const prompt = state.prompt;
+        if (!LETTER.test(char)) {
+          return;
+        }
+        const c = char.toLowerCase();
+        const expected = prompt.word.charAt(prompt.cursor).toLowerCase();
+
+        if (c !== expected) {
+          state = { ...state, combo: 0, prompt: { ...prompt, mistyped: true } };
+          emit({ type: 'MISTYPE', expected });
+          return;
+        }
+
+        const cursor = prompt.cursor + 1;
+        if (cursor < prompt.word.length) {
+          state = { ...state, prompt: { ...prompt, cursor } };
+          return;
+        }
+
+        // Completed the break word.
+        const bp = monster.breakPart;
+        const part = state.part;
+        if (bp !== undefined && part !== null) {
+          const newGauge = part.gauge + 1;
+          const broken = newGauge >= part.threshold;
+          state = {
+            ...state,
+            part: { ...part, gauge: newGauge, broken },
+          };
+          emit({ type: 'BREAK_PROGRESS', partId: part.id, gauge: newGauge, threshold: part.threshold });
+
+          if (broken) {
+            emit({ type: 'PART_BROKEN', partId: part.id, partName: part.name });
+            nextBreakAtMs = null;
+          } else {
+            nextBreakAtMs = now() + (bp.intervalMs ?? 0);
+          }
+        }
+        nextAttackPrompt();
+        return;
+      }
+
+      // Attack prompt.
       const result = applyTypedCharacter(state, char, baseAttackDamage);
       state = result.state;
 
@@ -122,7 +298,7 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
             emit({ type: 'VICTORY' });
             return;
           }
-          nextPrompt();
+          nextAttackPrompt();
           return;
         }
         case 'correct':
@@ -144,8 +320,15 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
       if (state.status !== 'paused' || pausedAtMs === null) {
         return;
       }
-      // Shift the deadline by the paused duration so no time is silently charged.
-      nextMonsterAttackAtMs += now() - pausedAtMs;
+      const pausedDuration = now() - pausedAtMs;
+      nextMonsterAttackAtMs += pausedDuration;
+      if (defenseDeadlineAtMs !== null) {
+        defenseDeadlineAtMs += pausedDuration;
+        state = { ...state, defenseDeadlineMs: defenseDeadlineAtMs };
+      }
+      if (nextBreakAtMs !== null) {
+        nextBreakAtMs += pausedDuration;
+      }
       pausedAtMs = null;
       state = { ...state, status: 'active' };
       emit({ type: 'RESUMED' });
@@ -156,7 +339,9 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
         return;
       }
       pausedAtMs = null;
-      state = { ...state, status: 'abandoned', prompt: null };
+      defenseDeadlineAtMs = null;
+      nextBreakAtMs = null;
+      state = { ...state, status: 'abandoned', prompt: null, defenseDeadlineMs: null };
       emit({ type: 'ABANDONED' });
     },
 
@@ -165,19 +350,33 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
         return;
       }
       const time = now();
-      if (time < nextMonsterAttackAtMs) {
+
+      // Defense phase: resolve on deadline.
+      if (state.prompt?.kind === 'defense' && defenseDeadlineAtMs !== null) {
+        if (time < defenseDeadlineAtMs) {
+          return;
+        }
+        resolveDefense(false, time);
         return;
       }
 
-      const playerHp = Math.max(0, state.playerHp - monster.attackDamage);
-      // Reschedule from now, so a long stall never queues several unseen hits.
-      nextMonsterAttackAtMs = time + monster.attackCadenceMs;
-      state = { ...state, playerHp };
-      emit({ type: 'MONSTER_ATTACK', damage: monster.attackDamage });
+      // Monster attack cadence takes priority over break opportunities.
+      if (time >= nextMonsterAttackAtMs) {
+        startDefense(time);
+        return;
+      }
 
-      if (playerHp === 0) {
-        state = { ...state, status: 'defeat', prompt: null };
-        emit({ type: 'DEFEAT' });
+      // Break opportunity, only when no defense is due and part is unbroken.
+      if (
+        hasBreak(monster) &&
+        state.part !== null &&
+        !state.part.broken &&
+        nextBreakAtMs !== null &&
+        time >= nextBreakAtMs &&
+        state.prompt?.kind !== 'break'
+      ) {
+        startBreak(time);
+        return;
       }
     },
   };
