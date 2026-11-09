@@ -309,11 +309,7 @@ body {
 }
 
 .hub__header {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   text-align: center;
-  background: var(--bg);
   padding-bottom: 0.5rem;
 }
 
@@ -546,5 +542,55 @@ body {
 
 .word-area {
   position: relative;
+}
+
+.results {
+  display: grid;
+  gap: 0.35rem;
+  width: 100%;
+  max-width: 260px;
+  padding: 0.5rem 0.6rem;
+  border-radius: 0.3rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid #2a3342;
+}
+
+.results__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+}
+
+.results__empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.inventory-list {
+  display: grid;
+  gap: 0.5rem;
+  width: min(420px, 100%);
+}
+
+.inventory-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.3rem;
+  background: var(--panel);
+  border: 1px solid #2a3342;
+}
+
+.inventory-row__name {
+  font-size: 0.95rem;
+}
+
+.inventory-row__qty {
+  font-family: 'Consolas', 'Courier New', monospace;
+  font-weight: 700;
 }
 

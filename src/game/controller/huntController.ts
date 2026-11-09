@@ -12,6 +12,13 @@ export type HuntControllerOptions = {
   random: () => number;
 };
 
+export type HuntStats = {
+  correctKeystrokes: number;
+  incorrectKeystrokes: number;
+  wordsCompleted: number;
+  durationMs: number;
+};
+
 export type HuntController = {
   getState: () => HuntState;
   /** Returns and clears the events since the previous drain. */
@@ -23,6 +30,8 @@ export type HuntController = {
   abandon: () => void;
   /** Call from the render loop; resolves a due monster attack, defense deadline, or break opportunity. */
   tick: () => void;
+  /** Snapshot of keystroke/word/duration stats for this hunt. */
+  getStats: () => HuntStats;
 };
 
 const LETTER = /^[a-z]$/i;
@@ -96,6 +105,11 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
   let promptCount = 0;
   let lastWord: string | null = null;
   let defenseDeadlineAtMs: number | null = null;
+  let correctKeystrokes = 0;
+  let incorrectKeystrokes = 0;
+  let wordsCompleted = 0;
+  let startedAtMs: number | null = null;
+  let endedAtMs: number | null = null;
 
   const emit = (event: HuntEvent) => {
     events.push(event);
@@ -119,6 +133,7 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
     emit({ type: 'MONSTER_ATTACK', damage: monster.attackDamage });
 
     if (playerHp === 0) {
+      endedAtMs = now();
       state = { ...state, status: 'defeat', prompt: null, defenseDeadlineMs: null };
       emit({ type: 'DEFEAT' });
     }
@@ -137,6 +152,7 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
       emit({ type: 'MONSTER_ATTACK', damage: monster.attackDamage });
 
       if (playerHp === 0) {
+        endedAtMs = now();
         state = { ...state, status: 'defeat', prompt: null, defenseDeadlineMs: null };
         emit({ type: 'DEFEAT' });
         return;
@@ -205,6 +221,11 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
       state = { ...state, status: 'active' };
       nextMonsterAttackAtMs = now() + monster.attackCadenceMs;
       nextBreakAtMs = hasBreak(monster) ? now() + (monster.breakPart?.intervalMs ?? 0) : null;
+      startedAtMs = now();
+      endedAtMs = null;
+      correctKeystrokes = 0;
+      incorrectKeystrokes = 0;
+      wordsCompleted = 0;
       nextAttackPrompt();
       emit({ type: 'HUNT_STARTED' });
     },
@@ -224,17 +245,20 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
         const expected = prompt.word.charAt(prompt.cursor).toLowerCase();
 
         if (c !== expected) {
+          incorrectKeystrokes += 1;
           state = { ...state, combo: 0, prompt: { ...prompt, mistyped: true } };
           emit({ type: 'MISTYPE', expected });
           return;
         }
 
+        correctKeystrokes += 1;
         const cursor = prompt.cursor + 1;
         if (cursor < prompt.word.length) {
           state = { ...state, prompt: { ...prompt, cursor } };
           return;
         }
 
+        wordsCompleted += 1;
         resolveDefense(true, now());
         return;
       }
@@ -249,17 +273,20 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
         const expected = prompt.word.charAt(prompt.cursor).toLowerCase();
 
         if (c !== expected) {
+          incorrectKeystrokes += 1;
           state = { ...state, combo: 0, prompt: { ...prompt, mistyped: true } };
           emit({ type: 'MISTYPE', expected });
           return;
         }
 
+        correctKeystrokes += 1;
         const cursor = prompt.cursor + 1;
         if (cursor < prompt.word.length) {
           state = { ...state, prompt: { ...prompt, cursor } };
           return;
         }
 
+        wordsCompleted += 1;
         // Completed the break word.
         const bp = monster.breakPart;
         const part = state.part;
@@ -285,6 +312,14 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
 
       // Attack prompt.
       const result = applyTypedCharacter(state, char, baseAttackDamage);
+      if (result.outcome.kind === 'incorrect') {
+        incorrectKeystrokes += 1;
+      } else if (result.outcome.kind === 'correct' || result.outcome.kind === 'completed') {
+        correctKeystrokes += 1;
+      }
+      if (result.outcome.kind === 'completed') {
+        wordsCompleted += 1;
+      }
       state = result.state;
 
       switch (result.outcome.kind) {
@@ -295,6 +330,7 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
           const { word, damage, flawless } = result.outcome;
           emit({ type: 'PLAYER_ATTACK', word, damage, flawless });
           if (state.status === 'victory') {
+            endedAtMs = now();
             emit({ type: 'VICTORY' });
             return;
           }
@@ -341,6 +377,7 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
       pausedAtMs = null;
       defenseDeadlineAtMs = null;
       nextBreakAtMs = null;
+      endedAtMs = now();
       state = { ...state, status: 'abandoned', prompt: null, defenseDeadlineMs: null };
       emit({ type: 'ABANDONED' });
     },
@@ -378,6 +415,17 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
         startBreak(time);
         return;
       }
+    },
+
+    getStats: () => {
+      const end = endedAtMs ?? now();
+      const start = startedAtMs ?? end;
+      return {
+        correctKeystrokes,
+        incorrectKeystrokes,
+        wordsCompleted,
+        durationMs: Math.max(0, Math.round(end - start)),
+      };
     },
   };
 }

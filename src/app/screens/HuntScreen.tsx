@@ -5,6 +5,10 @@ import { mossSlime } from '../../content/monsters';
 import { hunterDefinition } from '../../content/hunter';
 import { createHuntController, type HuntController } from '../../game/controller/huntController';
 import type { MonsterDefinition } from '../../game/domain/types';
+import { calculateHuntRewards } from '../../game/domain/rewards';
+import { getMaterial } from '../../content/materials';
+import { finalizeHunt } from '../../persistence/gameRepository';
+import type { FinalizedHunt } from '../../persistence/types';
 
 type Flash = 'hit' | 'miss' | 'monster' | null;
 
@@ -37,6 +41,14 @@ export default function HuntScreen({
   const [hunterLevel, setHunterLevel] = useState(1);
   const [flawlessFlash, setFlawlessFlash] = useState(false);
   const [comboLostFlash, setComboLostFlash] = useState(false);
+  const [settlement, setSettlement] = useState<
+    | { status: 'idle' }
+    | { status: 'pending' }
+    | { status: 'done'; result: FinalizedHunt }
+    | { status: 'error'; message: string }
+  >({ status: 'idle' });
+  const settledRef = useRef<string | null>(null);
+  const [settleTick, setSettleTick] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const phaserRef = useRef<PhaserViewportHandle>(null);
   const flashTimer = useRef<number | null>(null);
@@ -128,6 +140,40 @@ export default function HuntScreen({
   }, [controller]);
 
   useEffect(() => {
+    const isTerminal =
+      state.status === 'victory' || state.status === 'defeat' || state.status === 'abandoned';
+    if (!isTerminal) return;
+    if (settledRef.current === state.huntId) return;
+    settledRef.current = state.huntId;
+
+    const outcome = state.status as 'victory' | 'defeat' | 'abandoned';
+    const rewards = calculateHuntRewards({
+      huntId: state.huntId,
+      monster,
+      outcome,
+      partBroken: state.part?.broken ?? false,
+    });
+    const stats = controller.getStats();
+
+    setSettlement({ status: 'pending' });
+    finalizeHunt({
+      hunt_id: state.huntId,
+      map_id: monster.mapId,
+      monster_id: monster.id,
+      outcome,
+      duration_ms: stats.durationMs,
+      correct_keystrokes: stats.correctKeystrokes,
+      incorrect_keystrokes: stats.incorrectKeystrokes,
+      words_completed: stats.wordsCompleted,
+      xp_awarded: rewards.xp,
+      loot: rewards.drops.map((drop) => ({ material_id: drop.materialId, quantity: drop.quantity })),
+      broken_part_ids: rewards.brokenPartIds,
+    })
+      .then((result) => setSettlement({ status: 'done', result }))
+      .catch((err) => setSettlement({ status: 'error', message: String(err) }));
+  }, [state.status, state.huntId, settleTick, controller, monster]);
+
+  useEffect(() => {
     if (state.status === 'active') {
       inputRef.current?.focus();
     }
@@ -163,7 +209,15 @@ export default function HuntScreen({
     sync();
   }
 
+  function retrySettle() {
+    settledRef.current = null;
+    setSettlement({ status: 'idle' });
+    setSettleTick((value) => value + 1);
+  }
+
   function replay() {
+    settledRef.current = null;
+    setSettlement({ status: 'idle' });
     setController(makeController(monster));
   }
 
@@ -300,7 +354,32 @@ export default function HuntScreen({
         <div className="overlay overlay--victory">
           <h2>Victory</h2>
           <p>The {monster.name} is defeated.</p>
-          {state.part?.broken && <p className="overlay__bonus">Part broken: {state.part.name}</p>}
+          {settlement.status === 'pending' && <p className="results__empty">Settling rewards…</p>}
+          {settlement.status === 'error' && (
+            <div className="results">
+              <p className="results__empty">Settlement failed: {settlement.message}</p>
+              <button type="button" className="btn" onClick={retrySettle}>
+                Retry
+              </button>
+            </div>
+          )}
+          {settlement.status === 'done' && (
+            <div className="results">
+              <div className="results__row">
+                <span>XP</span>
+                <span>+{settlement.result.xp_awarded}</span>
+              </div>
+              {settlement.result.loot.map((drop) => (
+                <div key={drop.material_id} className="results__row">
+                  <span>{getMaterial(drop.material_id)?.name ?? drop.material_id}</span>
+                  <span>x{drop.quantity}</span>
+                </div>
+              ))}
+              {settlement.result.loot.length === 0 && (
+                <p className="results__empty">No materials dropped.</p>
+              )}
+            </div>
+          )}
           <div className="controls">
             <button type="button" className="btn btn--primary" onClick={replay}>
               Replay
@@ -318,6 +397,18 @@ export default function HuntScreen({
         <div className="overlay overlay--defeat">
           <h2>Defeat</h2>
           <p>You were knocked out.</p>
+          {settlement.status === 'pending' && <p className="results__empty">Settling…</p>}
+          {settlement.status === 'error' && (
+            <div className="results">
+              <p className="results__empty">Settlement failed: {settlement.message}</p>
+              <button type="button" className="btn" onClick={retrySettle}>
+                Retry
+              </button>
+            </div>
+          )}
+          {(settlement.status === 'done' || settlement.status === 'idle') && (
+            <p className="results__empty">No rewards.</p>
+          )}
           <div className="controls">
             <button type="button" className="btn btn--primary" onClick={replay}>
               Replay

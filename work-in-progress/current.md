@@ -1,40 +1,35 @@
 # Current Work
 
-Last updated: 2026-11-06
+Last updated: 2026-11-09
 
 ## Objective
 
-Phase 02 — Complete Hunt Loop. Combat depth (step 3) implemented; loot/XP (step 4) is next.
+Phase 02 — Complete Hunt Loop. Step 5 (transactional persistence) implemented; verification (step 6) is next.
 
 ## Current Status
 
-Phase 02 steps 1–3 complete. Step 3 added optional part-break prompt with gauge (breaks once per hunt), a second monster (Bristle Boar) as a data-driven behavior difference, break/defense/attack prompt priority, and clearer feedback (flawless, combo-lost, break, part-broken). 37 tests passing. Step 4 (loot/XP with seeded RNG) not started.
+Phase 02 steps 1–5 complete. Step 5 added migration 002 (hunt_history, inventory_materials), idempotent atomic `finalize_hunt` in Rust, controller stats, settlement flow in HuntScreen (shows only committed rewards), and an Inventory screen. 48 TS tests + 4 Rust tests passing. Step 6 (verification + playtest) not started.
 
 ## Completed
 
 - Phase 01 fully closed.
-- Phase 02 step 1: hub + Hunt Board (now lists Moss Slime and Bristle Boar), Return-to-Hub.
-- Phase 02 step 2: defensive typing end to end.
-- Phase 02 step 3: combat depth.
-  - `Prompt.kind` now `'attack' | 'defense' | 'break'`; `HuntState.part` tracks gauge/threshold/broken.
-  - `MonsterDefinition.breakPart` (id, name, words, threshold, intervalMs, bonusMaterialId).
-  - Controller: break timer, startBreak, break typing increments gauge, breaks once, defense interrupts break (BREAK_LOST), pause shifts break timer, abandon clears it.
-  - New events: BREAK_STARTED, BREAK_PROGRESS, PART_BROKEN, BREAK_LOST.
-  - Moss Slime: break part "Moss Crown" (threshold 2, interval 8s); Bristle Boar: "Boar Tusk".
-  - HuntScreen accepts a `monster` prop; HubScreen starts hunts with the selected monster.
-  - HUD: part gauge row, break banner, flawless/combo-lost flashes, part-broken bonus line.
-  - Phaser: break/part-broken visuals.
-  - Tests: 37 passing (added break-appears, two-breaks-break-part, defense-interrupts-break).
+- Phase 02 steps 1–4 complete.
+- Phase 02 step 5: transactional local persistence.
+  - Migration 002: hunt_history + inventory_materials tables and indexes; user_version 2.
+  - `finalize_hunt` command: validates input, idempotent on duplicate hunt_id, atomic transaction (history + XP + inventory), returns committed summary.
+  - `load_game_save` now returns inventory.
+  - Controller: correct/incorrect keystrokes, words completed, duration; `getStats()`.
+  - HuntScreen: settles once per hunt on terminal state; shows "Settling…", committed XP/loot, or error with Retry.
+  - InventoryScreen: lists stored materials with names/quantities; empty state; reachable from Hub.
+  - Rust tests: 4 passing (migration v2, victory pays once, defeat pays nothing, invalid input rollback).
 
 ## In Progress
 
-Loot and experience (Phase 02 step 4) — not started.
+Verification and playtest (Phase 02 step 6) — not started.
 
 ## Remaining (Phase 02)
 
-- Step 4: material catalog with stable IDs, seeded RNG drops + XP, part-bonus material on victory, results summary with correct numbers; defeat/abandon no materials.
-- Step 5: `hunt_history` + `inventory_materials` tables, `finalize_hunt` (idempotent, atomic), Inventory screen, UI shows only committed rewards.
-- Step 6: verification (defense/priority/repeated part-break, drop ranges + reproducibility, double settlement, rollback, manual win/defeat/abandon/restart/Alt+Tab), playtest.
+- Step 6: tests for defense success/failure, prompt priority, repeated part-break input (done), drop ranges + seeded reproducibility (done), double settlement (Rust done), rollback (Rust done), manual win/defeat/abandon/restart/Alt+Tab + persisted values, playtest pace.
 
 ## Blockers
 
@@ -42,14 +37,15 @@ None.
 
 ## Relevant Files
 
+- `src-tauri/src/db.rs`
+- `src-tauri/src/commands.rs`
+- `src-tauri/src/migrations/002_hunt_history.sql`
+- `src/persistence/types.ts`, `src/persistence/gameRepository.ts`
 - `src/game/controller/huntController.ts`
-- `src/game/domain/types.ts`
-- `src/content/monsters.ts`
-- `src/app/screens/HubScreen.tsx`
 - `src/app/screens/HuntScreen.tsx`
+- `src/app/screens/InventoryScreen.tsx`
+- `src/app/screens/HubScreen.tsx`
 - `src/app/App.tsx`
-- `src/game/renderer/huntScene.ts`
-- `src/tests/huntController.test.ts`
 
 ## Relevant Memory
 
@@ -58,4 +54,4 @@ None.
 
 ## Next Recommended Step
 
-Phase 02 step 4: loot and XP. Add a materials catalog, pure `rollDrops`/`calculateXp` functions with seeded RNG, part-bonus material on victory, and a results overlay showing XP + drops. Then step 5 persistence.
+Phase 02 step 6: verification. Run the app, complete win/defeat/abandon flows, check inventory persists across restart, retry settlement, Alt+Tab pause, and tune pace. Add any missing automated tests (e.g., controller stats). Then playtest and fill end-of-phase notes.

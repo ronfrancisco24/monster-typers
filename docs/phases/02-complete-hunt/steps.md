@@ -39,20 +39,20 @@ A complete forest-monster hunt from selection through typing combat to committed
 
 ### 4. Loot and experience
 
-- [ ] Define a few stable `material.*` catalog IDs and drop rates.
-- [ ] On victory, calculate XP and material drops from a seeded/injected RNG.
-- [ ] Award bonus material when a qualifying part was broken.
-- [ ] Defeat and abandon give no monster materials in MVP.
-- [ ] Show victory/defeat/abandon result summary with correct numbers.
+- [x] Define a few stable `material.*` catalog IDs and drop rates.
+- [x] On victory, calculate XP and material drops from a seeded/injected RNG.
+- [x] Award bonus material when a qualifying part was broken.
+- [x] Defeat and abandon give no monster materials in MVP.
+- [x] Show victory/defeat/abandon result summary with correct numbers.
 
 ### 5. Transactional local persistence
 
-- [ ] Implement `hunt_history` and `inventory_materials` database tables.
-- [ ] Implement `finalize_hunt` in the Tauri/Rust persistence layer.
-- [ ] Save history, XP, inventory, and any unlock updates atomically.
-- [ ] Make duplicate `huntId` settlement return prior result without paying twice.
-- [ ] Display only rewards confirmed by the committed save result.
-- [ ] Add a simple Inventory screen showing stored materials.
+- [x] Implement `hunt_history` and `inventory_materials` database tables.
+- [x] Implement `finalize_hunt` in the Tauri/Rust persistence layer.
+- [x] Save history, XP, inventory, and any unlock updates atomically.
+- [x] Make duplicate `huntId` settlement return prior result without paying twice.
+- [x] Display only rewards confirmed by the committed save result.
+- [x] Add a simple Inventory screen showing stored materials.
 
 ### 6. Verification
 

@@ -67,6 +67,7 @@ export type MonsterDefinition = {
   hp: number;
   attackDamage: number;
   attackCadenceMs: number;
+  xpReward: number;
   attackWords: readonly string[];
   isBoss?: boolean;
   difficulty?: 'easy' | 'normal' | 'hard';

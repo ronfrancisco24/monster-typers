@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import TitleBar from './components/TitleBar';
 import HubScreen from './screens/HubScreen';
 import HuntScreen from './screens/HuntScreen';
+import InventoryScreen from './screens/InventoryScreen';
 import { placeWindow } from '../platform/desktopWindow';
 import { mossSlime } from '../content/monsters';
 import type { MonsterDefinition } from '../game/domain/types';
 
-type Screen = 'hub' | 'hunt';
+type Screen = 'hub' | 'hunt' | 'inventory';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('hub');
@@ -25,9 +26,12 @@ export default function App() {
             setSelectedMonster(monster);
             setScreen('hunt');
           }}
+          onOpenInventory={() => setScreen('inventory')}
         />
-      ) : (
+      ) : screen === 'hunt' ? (
         <HuntScreen monster={selectedMonster} onReturnToHub={() => setScreen('hub')} />
+      ) : (
+        <InventoryScreen onReturnToHub={() => setScreen('hub')} />
       )}
     </div>
   );

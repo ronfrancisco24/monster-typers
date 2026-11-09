@@ -292,6 +292,20 @@ describe('huntController', () => {
     expect(controller.drainEvents()).toEqual([]);
   });
 
+  it('reports integer millisecond durations and keystroke stats', () => {
+    const { controller, advance } = setup();
+    controller.start();
+    controller.drainEvents();
+
+    advance(1234);
+    controller.typeCharacter(controller.getState().prompt?.word.charAt(0) ?? 'a');
+    const stats = controller.getStats();
+
+    expect(Number.isInteger(stats.durationMs)).toBe(true);
+    expect(stats.durationMs).toBeGreaterThanOrEqual(0);
+    expect(stats.correctKeystrokes + stats.incorrectKeystrokes).toBeGreaterThanOrEqual(1);
+  });
+
   it('abandons only an active or paused hunt', () => {
     const { controller } = setup();
     controller.abandon();

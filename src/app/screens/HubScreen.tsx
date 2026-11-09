@@ -1,26 +1,27 @@
 import { bristleBoar, mossSlime } from '../../content/monsters';
+import { materialName } from '../../content/materials';
 import type { MonsterDefinition } from '../../game/domain/types';
 
 interface Props {
   onStartHunt: (monster: MonsterDefinition) => void;
+  onOpenInventory: () => void;
 }
 
 const MONSTERS = [mossSlime, bristleBoar];
 
 function materialLabel(id: string): string {
-  return id
-    .replace(/^material\./, '')
-    .split('_')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+  return materialName(id);
 }
 
-export default function HubScreen({ onStartHunt }: Props) {
+export default function HubScreen({ onStartHunt, onOpenInventory }: Props) {
   return (
     <section className="hub">
       <header className="hub__header">
         <h1 className="hub__title">Hunt Board</h1>
         <p className="hub__subtitle">Verdant Forest — {MONSTERS.length} monsters available.</p>
+        <button type="button" className="btn" onClick={onOpenInventory}>
+          Inventory
+        </button>
       </header>
 
       <div className="monster-list">

@@ -8,6 +8,7 @@ export const mossSlime: MonsterDefinition = {
   hp: 40,
   attackDamage: 8,
   attackCadenceMs: 6000,
+  xpReward: 20,
   attackWords: ['moss', 'slime', 'drip', 'spore', 'ooze', 'mud', 'wet'],
   defenseWords: ['roll', 'duck', 'guard'],
   defenseWindowMs: 3000,
@@ -20,7 +21,10 @@ export const mossSlime: MonsterDefinition = {
     intervalMs: 8000,
     bonusMaterialId: 'material.moss_crown',
   },
-  drops: [{ materialId: 'material.moss_gel', chance: 1, minQuantity: 1, maxQuantity: 2 }],
+  drops: [
+    { materialId: 'material.moss_gel', chance: 1, minQuantity: 1, maxQuantity: 2 },
+    { materialId: 'material.slime_core', chance: 0.25, minQuantity: 1, maxQuantity: 1 },
+  ],
 };
 
 /** Faster, harder-hitting forest monster; data-driven behavior difference. */
@@ -31,6 +35,7 @@ export const bristleBoar: MonsterDefinition = {
   hp: 55,
   attackDamage: 10,
   attackCadenceMs: 4500,
+  xpReward: 35,
   attackWords: ['charge', 'tusk', 'bristle', 'snout', 'gore', 'fierce', 'wild'],
   defenseWords: ['dodge', 'block', 'leap'],
   defenseWindowMs: 2200,
@@ -43,5 +48,8 @@ export const bristleBoar: MonsterDefinition = {
     intervalMs: 7000,
     bonusMaterialId: 'material.boar_tusk',
   },
-  drops: [{ materialId: 'material.boar_hide', chance: 1, minQuantity: 1, maxQuantity: 2 }],
+  drops: [
+    { materialId: 'material.boar_hide', chance: 1, minQuantity: 1, maxQuantity: 2 },
+    { materialId: 'material.boar_fang', chance: 0.35, minQuantity: 1, maxQuantity: 1 },
+  ],
 };

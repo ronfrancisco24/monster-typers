@@ -1,7 +1,7 @@
 mod commands;
 mod db;
 
-use commands::{load_game_save, set_setting};
+use commands::{finalize_hunt, load_game_save, set_setting};
 use db::Db;
 use tauri::Manager;
 
@@ -29,7 +29,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![load_game_save, set_setting])
+        .invoke_handler(tauri::generate_handler![finalize_hunt, load_game_save, set_setting])
         .run(tauri::generate_context!())
         .expect("error while building tauri application");
 }
