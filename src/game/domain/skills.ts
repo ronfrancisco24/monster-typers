@@ -56,6 +56,72 @@ export const SKILLS: readonly SkillDefinition[] = [
       { rank: 3, cost: 2, effect: { type: 'rareDropChanceBonus', amount: 0.2 }, description: '+20% rare drop chance' },
     ],
   },
+  {
+    id: 'skill.heavy_blow',
+    name: 'Heavy Blow',
+    branch: 'offense',
+    maxRank: 3,
+    ranks: [
+      { rank: 1, cost: 2, effect: { type: 'attackDamageBonus', amount: 2 }, description: '+2 attack damage' },
+      { rank: 2, cost: 2, effect: { type: 'attackDamageBonus', amount: 2 }, description: '+2 attack damage' },
+      { rank: 3, cost: 3, effect: { type: 'attackDamageBonus', amount: 3 }, description: '+3 attack damage' },
+    ],
+  },
+  {
+    id: 'skill.relentless',
+    name: 'Relentless',
+    branch: 'offense',
+    maxRank: 3,
+    ranks: [
+      { rank: 1, cost: 1, effect: { type: 'attackDamageBonus', amount: 1 }, description: '+1 attack damage' },
+      { rank: 2, cost: 2, effect: { type: 'attackDamageBonus', amount: 2 }, description: '+2 attack damage' },
+      { rank: 3, cost: 2, effect: { type: 'attackDamageBonus', amount: 2 }, description: '+2 attack damage' },
+    ],
+  },
+  {
+    id: 'skill.iron_will',
+    name: 'Iron Will',
+    branch: 'defense',
+    maxRank: 3,
+    ranks: [
+      { rank: 1, cost: 1, effect: { type: 'defenseWindowBonusMs', amount: 200 }, description: '+0.2s defense window' },
+      { rank: 2, cost: 1, effect: { type: 'defenseWindowBonusMs', amount: 200 }, description: '+0.2s defense window' },
+      { rank: 3, cost: 2, effect: { type: 'defenseWindowBonusMs', amount: 300 }, description: '+0.3s defense window' },
+    ],
+  },
+  {
+    id: 'skill.steadfast',
+    name: 'Steadfast',
+    branch: 'defense',
+    maxRank: 3,
+    ranks: [
+      { rank: 1, cost: 1, effect: { type: 'defenseWindowBonusMs', amount: 100 }, description: '+0.1s defense window' },
+      { rank: 2, cost: 2, effect: { type: 'defenseWindowBonusMs', amount: 200 }, description: '+0.2s defense window' },
+      { rank: 3, cost: 2, effect: { type: 'defenseWindowBonusMs', amount: 300 }, description: '+0.3s defense window' },
+    ],
+  },
+  {
+    id: 'skill.scavenger',
+    name: 'Scavenger',
+    branch: 'gathering',
+    maxRank: 3,
+    ranks: [
+      { rank: 1, cost: 1, effect: { type: 'rareDropChanceBonus', amount: 0.1 }, description: '+10% rare drop chance' },
+      { rank: 2, cost: 1, effect: { type: 'rareDropChanceBonus', amount: 0.1 }, description: '+10% rare drop chance' },
+      { rank: 3, cost: 2, effect: { type: 'rareDropChanceBonus', amount: 0.15 }, description: '+15% rare drop chance' },
+    ],
+  },
+  {
+    id: 'skill.prospector',
+    name: 'Prospector',
+    branch: 'gathering',
+    maxRank: 3,
+    ranks: [
+      { rank: 1, cost: 1, effect: { type: 'rareDropChanceBonus', amount: 0.05 }, description: '+5% rare drop chance' },
+      { rank: 2, cost: 1, effect: { type: 'rareDropChanceBonus', amount: 0.1 }, description: '+10% rare drop chance' },
+      { rank: 3, cost: 2, effect: { type: 'rareDropChanceBonus', amount: 0.15 }, description: '+15% rare drop chance' },
+    ],
+  },
 ];
 
 export function getSkill(id: string): SkillDefinition | undefined {

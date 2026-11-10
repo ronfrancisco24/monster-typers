@@ -18,6 +18,7 @@ export type GameSave = {
   skill_ranks: Record<string, number>;
   owned_equipment: string[];
   equipment_loadout: Record<string, string>;
+  unlocked_maps: string[];
 };
 
 export type CraftEquipmentInput = {

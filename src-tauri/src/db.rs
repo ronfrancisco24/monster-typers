@@ -29,6 +29,7 @@ pub struct GameSave {
     pub skill_ranks: HashMap<String, i64>,
     pub owned_equipment: Vec<String>,
     pub equipment_loadout: HashMap<String, String>,
+    pub unlocked_maps: Vec<String>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
@@ -90,6 +91,10 @@ pub fn migrate(conn: &Connection) -> rusqlite::Result<()> {
     if version < 4 {
         conn.execute_batch(include_str!("migrations/004_equipment.sql"))?;
         conn.pragma_update(None, "user_version", 4)?;
+    }
+    if version < 5 {
+        conn.execute_batch(include_str!("migrations/005_unlocked_maps.sql"))?;
+        conn.pragma_update(None, "user_version", 5)?;
     }
     Ok(())
 }
@@ -391,6 +396,30 @@ pub fn load_equipment_loadout(conn: &Connection) -> rusqlite::Result<HashMap<Str
         map.insert(k, v);
     }
     Ok(map)
+}
+
+pub fn load_unlocked_maps(conn: &Connection) -> rusqlite::Result<Vec<String>> {
+    let mut stmt = conn.prepare("SELECT map_id FROM unlocked_maps ORDER BY map_id")?;
+    let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
+    let mut out = Vec::new();
+    for row in rows {
+        out.push(row?);
+    }
+    Ok(out)
+}
+
+pub fn unlock_map(conn: &mut Connection, map_id: &str) -> Result<(), String> {
+    if map_id.trim().is_empty() {
+        return Err("invalid map_id".to_string());
+    }
+    let tx = conn.transaction().map_err(|e| e.to_string())?;
+    tx.execute(
+        "INSERT OR IGNORE INTO unlocked_maps (map_id) VALUES (?1)",
+        params![map_id],
+    )
+    .map_err(|e| e.to_string())?;
+    tx.commit().map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 pub fn purchase_skill_rank(
@@ -702,7 +731,7 @@ mod tests {
         let version: i64 = conn
             .pragma_query_value(None, "user_version", |r| r.get(0))
             .unwrap();
-        assert_eq!(version, 4);
+        assert_eq!(version, 5);
 
         let history: i64 = conn
             .query_row("SELECT COUNT(*) FROM hunt_history", [], |r| r.get(0))
@@ -731,6 +760,10 @@ mod tests {
             .query_row("SELECT COUNT(*) FROM equipment_loadout", [], |r| r.get(0))
             .unwrap();
         assert_eq!(loadout, 0);
+        let unlocked: i64 = conn
+            .query_row("SELECT COUNT(*) FROM unlocked_maps", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(unlocked, 1);
     }
 
     #[test]
@@ -742,7 +775,7 @@ mod tests {
         let version: i64 = conn
             .pragma_query_value(None, "user_version", |r| r.get(0))
             .unwrap();
-        assert_eq!(version, 4);
+        assert_eq!(version, 5);
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM hunt_history", [], |r| r.get(0))
             .unwrap();

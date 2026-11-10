@@ -697,6 +697,25 @@ body {
   font-size: 0.8rem;
   color: var(--muted, #9aa4b2);
 }
+
+.map-section {
+  margin: 1rem 0;
+}
+
+.map-section__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.map-section__locked {
+  color: var(--muted, #9aa4b2);
+  font-style: italic;
+  margin: 0.5rem 0;
+}
+
+.monster-card--boss {
+  border-color: var(--accent, #60a5fa);
+}
 .skill-card__maxed {
   margin: 0;
   font-size: 0.85rem;
@@ -745,5 +764,24 @@ body {
   margin: 0.25rem 0 0.5rem;
   font-size: 0.8rem;
   color: var(--muted, #9aa4b2);
+}
+
+.map-section {
+  margin: 1rem 0;
+}
+
+.map-section__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.map-section__locked {
+  color: var(--muted, #9aa4b2);
+  font-style: italic;
+  margin: 0.5rem 0;
+}
+
+.monster-card--boss {
+  border-color: var(--accent, #60a5fa);
 }
 

@@ -23,7 +23,8 @@ pub fn load_game_save(state: tauri::State<Db>) -> Result<GameSave, String> {
     let skill_ranks = db::load_skill_ranks(&conn).map_err(|e| e.to_string())?;
     let owned_equipment = db::load_owned_equipment(&conn).map_err(|e| e.to_string())?;
     let equipment_loadout = db::load_equipment_loadout(&conn).map_err(|e| e.to_string())?;
-    Ok(GameSave { profile, settings, inventory, skill_ranks, owned_equipment, equipment_loadout })
+    let unlocked_maps = db::load_unlocked_maps(&conn).map_err(|e| e.to_string())?;
+    Ok(GameSave { profile, settings, inventory, skill_ranks, owned_equipment, equipment_loadout, unlocked_maps })
 }
 
 #[tauri::command]
@@ -92,4 +93,12 @@ pub fn set_equipment(
     db::migrate(&conn).map_err(|e| e.to_string())?;
     db::seed(&conn).map_err(|e| e.to_string())?;
     db::set_equipment(&mut conn, &slot, equipment_id.as_deref())
+}
+
+#[tauri::command]
+pub fn unlock_map(state: tauri::State<Db>, map_id: String) -> Result<(), String> {
+    let mut conn = state.conn.lock().map_err(|e| e.to_string())?;
+    db::migrate(&conn).map_err(|e| e.to_string())?;
+    db::seed(&conn).map_err(|e| e.to_string())?;
+    db::unlock_map(&mut conn, &map_id)
 }

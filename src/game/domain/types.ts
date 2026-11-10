@@ -83,6 +83,12 @@ export type MonsterDefinition = {
     intervalMs: number;
     bonusMaterialId?: string;
   };
+  /** Optional phase changes. When monster HP drops below a threshold, cadence/damage update. */
+  phases?: readonly {
+    hpThreshold: number;
+    attackCadenceMs?: number;
+    attackDamage?: number;
+  }[];
   drops?: readonly {
     materialId: string;
     chance: number;

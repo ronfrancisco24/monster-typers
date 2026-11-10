@@ -7,7 +7,8 @@ import type { MonsterDefinition } from '../../game/domain/types';
 import { calculateHuntRewards } from '../../game/domain/rewards';
 import { getMaterial } from '../../content/materials';
 import { equipmentForLoadout, equipmentSets } from '../../content/equipment';
-import { finalizeHunt, loadGameSave, reconcileProgression } from '../../persistence/gameRepository';
+import { maps } from '../../content/maps';
+import { finalizeHunt, loadGameSave, reconcileProgression, unlockMap } from '../../persistence/gameRepository';
 import type { FinalizedHunt, PlayerProfile } from '../../persistence/types';
 import { levelFromXp } from '../../game/domain/progression';
 import { deriveHunterStats } from '../../game/domain/stats';
@@ -197,6 +198,12 @@ export default function HuntScreen({
     settledRef.current = state.huntId;
 
     const outcome = state.status as 'victory' | 'defeat' | 'abandoned';
+    if (outcome === 'victory' && monster.isBoss) {
+      const nextMap = maps.find((m) => m.unlockRequirement.type === 'boss' && m.unlockRequirement.bossId === monster.id);
+      if (nextMap) {
+        void unlockMap(nextMap.id);
+      }
+    }
     const rewards = calculateHuntRewards({
       huntId: state.huntId,
       monster,

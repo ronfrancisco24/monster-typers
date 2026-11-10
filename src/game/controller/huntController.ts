@@ -84,6 +84,18 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
     throw new Error('Hunt requires valid break part data when a break part is present');
   }
 
+  let currentCadence = monster.attackCadenceMs;
+  let currentDamage = monster.attackDamage;
+  const applyPhase = (hp: number): void => {
+    const phases = monster.phases ?? [];
+    for (const phase of [...phases].sort((a, b) => a.hpThreshold - b.hpThreshold)) {
+      if (hp <= phase.hpThreshold * monster.hp) {
+        if (phase.attackCadenceMs !== undefined) currentCadence = phase.attackCadenceMs;
+        if (phase.attackDamage !== undefined) currentDamage = phase.attackDamage;
+      }
+    }
+  };
+
   let state: HuntState = {
     huntId,
     monsterId: monster.id,
@@ -127,10 +139,10 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
   };
 
   const applyMonsterAttack = (time: number): void => {
-    const playerHp = Math.max(0, state.playerHp - monster.attackDamage);
-    nextMonsterAttackAtMs = time + monster.attackCadenceMs;
+    const playerHp = Math.max(0, state.playerHp - currentDamage);
+    nextMonsterAttackAtMs = time + currentCadence;
     state = { ...state, playerHp };
-    emit({ type: 'MONSTER_ATTACK', damage: monster.attackDamage });
+    emit({ type: 'MONSTER_ATTACK', damage: currentDamage });
 
     if (playerHp === 0) {
       endedAtMs = now();
@@ -146,10 +158,10 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
     if (success) {
       emit({ type: 'DEFENSE_SUCCESS', word });
     } else {
-      const playerHp = Math.max(0, state.playerHp - monster.attackDamage);
+      const playerHp = Math.max(0, state.playerHp - currentDamage);
       state = { ...state, playerHp };
-      emit({ type: 'DEFENSE_FAILED', damage: monster.attackDamage });
-      emit({ type: 'MONSTER_ATTACK', damage: monster.attackDamage });
+      emit({ type: 'DEFENSE_FAILED', damage: currentDamage });
+      emit({ type: 'MONSTER_ATTACK', damage: currentDamage });
 
       if (playerHp === 0) {
         endedAtMs = now();
@@ -159,7 +171,7 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
       }
     }
 
-    nextMonsterAttackAtMs = time + monster.attackCadenceMs;
+    nextMonsterAttackAtMs = time + currentCadence;
     nextAttackPrompt();
   };
 
@@ -219,7 +231,7 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
         return;
       }
       state = { ...state, status: 'active' };
-      nextMonsterAttackAtMs = now() + monster.attackCadenceMs;
+      nextMonsterAttackAtMs = now() + currentCadence;
       nextBreakAtMs = hasBreak(monster) ? now() + (monster.breakPart?.intervalMs ?? 0) : null;
       startedAtMs = now();
       endedAtMs = null;
@@ -319,6 +331,7 @@ export function createHuntController(options: HuntControllerOptions): HuntContro
       }
       if (result.outcome.kind === 'completed') {
         wordsCompleted += 1;
+        applyPhase(result.state.monsterHp);
       }
       state = result.state;
 
