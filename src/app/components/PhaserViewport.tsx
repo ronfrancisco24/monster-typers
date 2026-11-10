@@ -28,6 +28,9 @@ export const PhaserViewport = forwardRef<PhaserViewportHandle, Props>(
         parent: containerRef.current,
         backgroundColor: '#0b0e14',
         scene: HuntScene,
+        pixelArt: true,
+        antialias: false,
+        roundPixels: true,
         scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
       });
       gameRef.current = game;

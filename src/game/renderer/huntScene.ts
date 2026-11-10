@@ -1,25 +1,65 @@
 import Phaser from 'phaser';
 import type { HuntEvent, HuntState } from '../domain/types';
+import { preloadRetroHunt, createRetroHuntAnimations, regionForMonster } from './assetLoader';
 
 export class HuntScene extends Phaser.Scene {
-  private ground!: Phaser.GameObjects.Rectangle;
-  private hunter!: Phaser.GameObjects.Rectangle;
-  private monster!: Phaser.GameObjects.Rectangle;
+  private ground!: Phaser.GameObjects.TileSprite;
+  private hunter!: Phaser.GameObjects.Sprite;
+  private monster!: Phaser.GameObjects.Sprite;
+  private background!: Phaser.GameObjects.Image;
   private hitText!: Phaser.GameObjects.Text;
+  private currentMonsterId: string | null = null;
 
   constructor() {
     super('HuntScene');
   }
 
+  preload(): void {
+    preloadRetroHunt(this);
+  }
+
   create(): void {
     const { width, height } = this.scale;
 
-    this.ground = this.add.rectangle(width / 2, height - 16, width, 16, 0x2a3342);
-    this.hunter = this.add.rectangle(110, height - 70, 44, 64, 0x38bdf8);
-    this.monster = this.add.rectangle(width - 110, height - 70, 64, 64, 0xf97316);
+    this.background = this.add.image(width / 2, height / 2, 'map.forest').setOrigin(0.5);
+    this.background.setDisplaySize(width, height);
+
+    this.ground = this.add.tileSprite(width / 2, height - 8, width, 16, 'tile.forest.ground');
+
+    this.hunter = this.add.sprite(110, height - 70, 'hunter.default').setOrigin(0.5, 1);
+    this.hunter.play('hunter.default.idle');
+
+    this.monster = this.add.sprite(width - 110, height - 70, 'monster.moss_slime').setOrigin(0.5, 1);
+    this.monster.play('monster.moss_slime.idle');
+
     this.hitText = this.add
       .text(width / 2, 48, '', { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' })
       .setOrigin(0.5);
+
+    createRetroHuntAnimations(this);
+  }
+
+  private reducedEffects(): boolean {
+    return document.body.classList.contains('reduced-effects');
+  }
+
+  private setMonster(monsterId: string): void {
+    if (monsterId === this.currentMonsterId) return;
+    this.currentMonsterId = monsterId;
+    const region = regionForMonster(monsterId);
+    if (this.background && this.textures.exists(`map.${region}`)) {
+      this.background.setTexture(`map.${region}`);
+      this.background.setDisplaySize(this.scale.width, this.scale.height);
+    }
+    const tileKey = `tile.${region}.ground`;
+    if (this.ground && this.textures.exists(tileKey)) {
+      this.ground.setTexture(tileKey);
+    }
+    if (this.textures.exists(monsterId)) {
+      this.monster.setTexture(monsterId);
+      const idleKey = `${monsterId}.idle`;
+      if (this.anims.exists(idleKey)) this.monster.play(idleKey);
+    }
   }
 
   applyEvents(events: HuntEvent[]): void {
@@ -39,6 +79,9 @@ export class HuntScene extends Phaser.Scene {
           yoyo: true,
           repeat: 1,
         });
+        if (this.anims.exists(`${this.currentMonsterId}.hit`)) {
+          this.monster.play(`${this.currentMonsterId}.hit`);
+        }
         this.hitText.setText(`-${event.damage}`);
         this.time.delayedCall(700, () => this.hitText.setText(''));
       } else if (event.type === 'MONSTER_ATTACK') {
@@ -59,53 +102,49 @@ export class HuntScene extends Phaser.Scene {
         this.hitText.setText(`-${event.damage}`);
         this.time.delayedCall(700, () => this.hitText.setText(''));
       } else if (event.type === 'MISTYPE') {
-        this.cameras.main.shake(140, 0.006);
+        if (!this.reducedEffects()) {
+          this.cameras.main.shake(140, 0.006);
+        }
       } else if (event.type === 'DEFENSE_STARTED') {
-        this.monster.setFillStyle(0xfb923c);
-        this.tweens.add({
-          targets: this.monster,
-          scale: 1.15,
-          duration: 120,
-          yoyo: true,
-        });
+        if (this.anims.exists(`${this.currentMonsterId}.attack`)) {
+          this.monster.play(`${this.currentMonsterId}.attack`);
+        }
         this.hitText.setText('Defend!');
       } else if (event.type === 'DEFENSE_SUCCESS') {
-        this.monster.setFillStyle(0x22c55e);
         this.hitText.setText('Blocked');
         this.time.delayedCall(700, () => this.hitText.setText(''));
-      } else if (event.type === 'DEFENSE_FAILED') {
-        this.monster.setFillStyle(0xf97316);
       } else if (event.type === 'BREAK_STARTED') {
-        this.monster.setFillStyle(0xa855f7);
-        this.tweens.add({
-          targets: this.monster,
-          scale: 1.12,
-          duration: 120,
-          yoyo: true,
-        });
+        if (this.anims.exists(`${this.currentMonsterId}.attack`)) {
+          this.monster.play(`${this.currentMonsterId}.attack`);
+        }
         this.hitText.setText('Break!');
       } else if (event.type === 'BREAK_PROGRESS') {
         this.hitText.setText('Hit!');
         this.time.delayedCall(400, () => this.hitText.setText(''));
       } else if (event.type === 'PART_BROKEN') {
-        this.monster.setFillStyle(0x4b5563);
         this.hitText.setText('Broken');
         this.time.delayedCall(900, () => this.hitText.setText(''));
       } else if (event.type === 'VICTORY') {
-        this.monster.setFillStyle(0x4b5563);
+        if (this.anims.exists(`${this.currentMonsterId}.defeat`)) {
+          this.monster.play(`${this.currentMonsterId}.defeat`);
+        }
         this.hitText.setText('Victory');
       } else if (event.type === 'DEFEAT') {
-        this.hunter.setFillStyle(0x4b5563);
+        if (this.anims.exists('hunter.default.defeat')) {
+          this.hunter.play('hunter.default.defeat');
+        }
         this.hitText.setText('Defeat');
       }
     }
   }
 
   applyState(state: HuntState): void {
+    this.setMonster(state.monsterId);
     if (state.status === 'ready' || state.status === 'active') {
       if (state.prompt?.kind !== 'defense' && state.prompt?.kind !== 'break') {
-        this.hunter.setFillStyle(0x38bdf8);
-        this.monster.setFillStyle(0xf97316);
+        if (this.anims.exists('hunter.default.idle')) this.hunter.play('hunter.default.idle');
+        const idleKey = `${this.currentMonsterId}.idle`;
+        if (this.currentMonsterId && this.anims.exists(idleKey)) this.monster.play(idleKey);
       }
     }
     if (state.status === 'paused') {

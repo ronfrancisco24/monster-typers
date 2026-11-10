@@ -1,0 +1,1192 @@
+{
+  "version": "1.0.0",
+  "logicalResolution": [
+    720,
+    405
+  ],
+  "viewport": [
+    640,
+    160
+  ],
+  "baseTile": [
+    16,
+    16
+  ],
+  "pixelArt": {
+    "nearestNeighbor": true,
+    "alpha": "binary",
+    "palette": [
+      "#161522",
+      "#292837",
+      "#403642",
+      "#584441",
+      "#825d4b",
+      "#ae7d53",
+      "#d9a271",
+      "#f7c993",
+      "#f5e6c2",
+      "#fff9eb",
+      "#233d31",
+      "#365a36",
+      "#4c7a41",
+      "#7ca34b",
+      "#accc61",
+      "#dbe68c",
+      "#22365b",
+      "#35557f",
+      "#527dac",
+      "#6bb5d8",
+      "#89dff5",
+      "#c7f6fa",
+      "#4a365f",
+      "#71528e",
+      "#ae79ab",
+      "#565561",
+      "#84828d",
+      "#b9b3af",
+      "#80323a",
+      "#c4473a",
+      "#ef6b32",
+      "#ffb04e"
+    ],
+    "masterPaletteSize": 32
+  },
+  "animations": {
+    "hunter.default": {
+      "base": "sprites/hunter/hunter.default.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/hunter/hunter.default.idle.00.png",
+            "sprites/hunter/hunter.default.idle.01.png",
+            "sprites/hunter/hunter.default.idle.02.png",
+            "sprites/hunter/hunter.default.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/hunter/hunter.default.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/hunter/hunter.default.attack.00.png",
+            "sprites/hunter/hunter.default.attack.01.png",
+            "sprites/hunter/hunter.default.attack.02.png",
+            "sprites/hunter/hunter.default.attack.03.png",
+            "sprites/hunter/hunter.default.attack.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/hunter/hunter.default.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/hunter/hunter.default.hit.00.png",
+            "sprites/hunter/hunter.default.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/hunter/hunter.default.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/hunter/hunter.default.defeat.00.png",
+            "sprites/hunter/hunter.default.defeat.01.png",
+            "sprites/hunter/hunter.default.defeat.02.png",
+            "sprites/hunter/hunter.default.defeat.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/hunter/hunter.default.defeat.sheet.png"
+        }
+      }
+    },
+    "monster.moss_slime": {
+      "base": "sprites/monsters/monster.moss_slime.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/monsters/monster.moss_slime.idle.00.png",
+            "sprites/monsters/monster.moss_slime.idle.01.png",
+            "sprites/monsters/monster.moss_slime.idle.02.png",
+            "sprites/monsters/monster.moss_slime.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.moss_slime.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/monsters/monster.moss_slime.attack.00.png",
+            "sprites/monsters/monster.moss_slime.attack.01.png",
+            "sprites/monsters/monster.moss_slime.attack.02.png"
+          ],
+          "frameCount": 3,
+          "sheet": "sprites/monsters/monster.moss_slime.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/monsters/monster.moss_slime.hit.00.png",
+            "sprites/monsters/monster.moss_slime.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/monsters/monster.moss_slime.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/monsters/monster.moss_slime.defeat.00.png",
+            "sprites/monsters/monster.moss_slime.defeat.01.png",
+            "sprites/monsters/monster.moss_slime.defeat.02.png",
+            "sprites/monsters/monster.moss_slime.defeat.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.moss_slime.defeat.sheet.png"
+        }
+      },
+      "region": "forest",
+      "boss": false
+    },
+    "monster.bristle_boar": {
+      "base": "sprites/monsters/monster.bristle_boar.png",
+      "size": [
+        64,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/monsters/monster.bristle_boar.idle.00.png",
+            "sprites/monsters/monster.bristle_boar.idle.01.png",
+            "sprites/monsters/monster.bristle_boar.idle.02.png",
+            "sprites/monsters/monster.bristle_boar.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.bristle_boar.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/monsters/monster.bristle_boar.attack.00.png",
+            "sprites/monsters/monster.bristle_boar.attack.01.png",
+            "sprites/monsters/monster.bristle_boar.attack.02.png"
+          ],
+          "frameCount": 3,
+          "sheet": "sprites/monsters/monster.bristle_boar.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/monsters/monster.bristle_boar.hit.00.png",
+            "sprites/monsters/monster.bristle_boar.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/monsters/monster.bristle_boar.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/monsters/monster.bristle_boar.defeat.00.png",
+            "sprites/monsters/monster.bristle_boar.defeat.01.png",
+            "sprites/monsters/monster.bristle_boar.defeat.02.png",
+            "sprites/monsters/monster.bristle_boar.defeat.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.bristle_boar.defeat.sheet.png"
+        }
+      },
+      "region": "forest",
+      "boss": false
+    },
+    "monster.sporecap_fungus": {
+      "base": "sprites/monsters/monster.sporecap_fungus.png",
+      "size": [
+        64,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/monsters/monster.sporecap_fungus.idle.00.png",
+            "sprites/monsters/monster.sporecap_fungus.idle.01.png",
+            "sprites/monsters/monster.sporecap_fungus.idle.02.png",
+            "sprites/monsters/monster.sporecap_fungus.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.sporecap_fungus.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/monsters/monster.sporecap_fungus.attack.00.png",
+            "sprites/monsters/monster.sporecap_fungus.attack.01.png",
+            "sprites/monsters/monster.sporecap_fungus.attack.02.png"
+          ],
+          "frameCount": 3,
+          "sheet": "sprites/monsters/monster.sporecap_fungus.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/monsters/monster.sporecap_fungus.hit.00.png",
+            "sprites/monsters/monster.sporecap_fungus.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/monsters/monster.sporecap_fungus.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/monsters/monster.sporecap_fungus.defeat.00.png",
+            "sprites/monsters/monster.sporecap_fungus.defeat.01.png",
+            "sprites/monsters/monster.sporecap_fungus.defeat.02.png",
+            "sprites/monsters/monster.sporecap_fungus.defeat.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.sporecap_fungus.defeat.sheet.png"
+        }
+      },
+      "region": "forest",
+      "boss": false
+    },
+    "monster.grove_guardian": {
+      "base": "sprites/bosses/monster.grove_guardian.png",
+      "size": [
+        96,
+        96
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/bosses/monster.grove_guardian.idle.00.png",
+            "sprites/bosses/monster.grove_guardian.idle.01.png",
+            "sprites/bosses/monster.grove_guardian.idle.02.png",
+            "sprites/bosses/monster.grove_guardian.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/bosses/monster.grove_guardian.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/bosses/monster.grove_guardian.attack.00.png",
+            "sprites/bosses/monster.grove_guardian.attack.01.png",
+            "sprites/bosses/monster.grove_guardian.attack.02.png"
+          ],
+          "frameCount": 3,
+          "sheet": "sprites/bosses/monster.grove_guardian.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/bosses/monster.grove_guardian.hit.00.png",
+            "sprites/bosses/monster.grove_guardian.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/bosses/monster.grove_guardian.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/bosses/monster.grove_guardian.defeat.00.png",
+            "sprites/bosses/monster.grove_guardian.defeat.01.png",
+            "sprites/bosses/monster.grove_guardian.defeat.02.png",
+            "sprites/bosses/monster.grove_guardian.defeat.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/bosses/monster.grove_guardian.defeat.sheet.png"
+        }
+      },
+      "region": "forest",
+      "boss": true,
+      "partBreak": "sprites/bosses/monster.grove_guardian.part_break.png"
+    },
+    "monster.crystal_bat": {
+      "base": "sprites/monsters/monster.crystal_bat.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/monsters/monster.crystal_bat.idle.00.png",
+            "sprites/monsters/monster.crystal_bat.idle.01.png",
+            "sprites/monsters/monster.crystal_bat.idle.02.png",
+            "sprites/monsters/monster.crystal_bat.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.crystal_bat.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/monsters/monster.crystal_bat.attack.00.png",
+            "sprites/monsters/monster.crystal_bat.attack.01.png",
+            "sprites/monsters/monster.crystal_bat.attack.02.png",
+            "sprites/monsters/monster.crystal_bat.attack.03.png",
+            "sprites/monsters/monster.crystal_bat.attack.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.crystal_bat.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/monsters/monster.crystal_bat.hit.00.png",
+            "sprites/monsters/monster.crystal_bat.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/monsters/monster.crystal_bat.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/monsters/monster.crystal_bat.defeat.00.png",
+            "sprites/monsters/monster.crystal_bat.defeat.01.png",
+            "sprites/monsters/monster.crystal_bat.defeat.02.png",
+            "sprites/monsters/monster.crystal_bat.defeat.03.png",
+            "sprites/monsters/monster.crystal_bat.defeat.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.crystal_bat.defeat.sheet.png"
+        }
+      },
+      "region": "caverns",
+      "boss": false
+    },
+    "monster.stalagmite_golem": {
+      "base": "sprites/monsters/monster.stalagmite_golem.png",
+      "size": [
+        64,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/monsters/monster.stalagmite_golem.idle.00.png",
+            "sprites/monsters/monster.stalagmite_golem.idle.01.png",
+            "sprites/monsters/monster.stalagmite_golem.idle.02.png",
+            "sprites/monsters/monster.stalagmite_golem.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.stalagmite_golem.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/monsters/monster.stalagmite_golem.attack.00.png",
+            "sprites/monsters/monster.stalagmite_golem.attack.01.png",
+            "sprites/monsters/monster.stalagmite_golem.attack.02.png",
+            "sprites/monsters/monster.stalagmite_golem.attack.03.png",
+            "sprites/monsters/monster.stalagmite_golem.attack.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.stalagmite_golem.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/monsters/monster.stalagmite_golem.hit.00.png",
+            "sprites/monsters/monster.stalagmite_golem.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/monsters/monster.stalagmite_golem.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/monsters/monster.stalagmite_golem.defeat.00.png",
+            "sprites/monsters/monster.stalagmite_golem.defeat.01.png",
+            "sprites/monsters/monster.stalagmite_golem.defeat.02.png",
+            "sprites/monsters/monster.stalagmite_golem.defeat.03.png",
+            "sprites/monsters/monster.stalagmite_golem.defeat.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.stalagmite_golem.defeat.sheet.png"
+        }
+      },
+      "region": "caverns",
+      "boss": false
+    },
+    "monster.gloom_spider": {
+      "base": "sprites/monsters/monster.gloom_spider.png",
+      "size": [
+        64,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/monsters/monster.gloom_spider.idle.00.png",
+            "sprites/monsters/monster.gloom_spider.idle.01.png",
+            "sprites/monsters/monster.gloom_spider.idle.02.png",
+            "sprites/monsters/monster.gloom_spider.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.gloom_spider.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/monsters/monster.gloom_spider.attack.00.png",
+            "sprites/monsters/monster.gloom_spider.attack.01.png",
+            "sprites/monsters/monster.gloom_spider.attack.02.png",
+            "sprites/monsters/monster.gloom_spider.attack.03.png",
+            "sprites/monsters/monster.gloom_spider.attack.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.gloom_spider.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/monsters/monster.gloom_spider.hit.00.png",
+            "sprites/monsters/monster.gloom_spider.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/monsters/monster.gloom_spider.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/monsters/monster.gloom_spider.defeat.00.png",
+            "sprites/monsters/monster.gloom_spider.defeat.01.png",
+            "sprites/monsters/monster.gloom_spider.defeat.02.png",
+            "sprites/monsters/monster.gloom_spider.defeat.03.png",
+            "sprites/monsters/monster.gloom_spider.defeat.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.gloom_spider.defeat.sheet.png"
+        }
+      },
+      "region": "caverns",
+      "boss": false
+    },
+    "monster.crystal_serpent": {
+      "base": "sprites/bosses/monster.crystal_serpent.png",
+      "size": [
+        96,
+        96
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/bosses/monster.crystal_serpent.idle.00.png",
+            "sprites/bosses/monster.crystal_serpent.idle.01.png",
+            "sprites/bosses/monster.crystal_serpent.idle.02.png",
+            "sprites/bosses/monster.crystal_serpent.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/bosses/monster.crystal_serpent.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/bosses/monster.crystal_serpent.attack.00.png",
+            "sprites/bosses/monster.crystal_serpent.attack.01.png",
+            "sprites/bosses/monster.crystal_serpent.attack.02.png",
+            "sprites/bosses/monster.crystal_serpent.attack.03.png",
+            "sprites/bosses/monster.crystal_serpent.attack.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/bosses/monster.crystal_serpent.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/bosses/monster.crystal_serpent.hit.00.png",
+            "sprites/bosses/monster.crystal_serpent.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/bosses/monster.crystal_serpent.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/bosses/monster.crystal_serpent.defeat.00.png",
+            "sprites/bosses/monster.crystal_serpent.defeat.01.png",
+            "sprites/bosses/monster.crystal_serpent.defeat.02.png",
+            "sprites/bosses/monster.crystal_serpent.defeat.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/bosses/monster.crystal_serpent.defeat.sheet.png"
+        }
+      },
+      "region": "caverns",
+      "boss": true,
+      "partBreak": "sprites/bosses/monster.crystal_serpent.part_break.png"
+    },
+    "monster.ash_hound": {
+      "base": "sprites/monsters/monster.ash_hound.png",
+      "size": [
+        64,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/monsters/monster.ash_hound.idle.00.png",
+            "sprites/monsters/monster.ash_hound.idle.01.png",
+            "sprites/monsters/monster.ash_hound.idle.02.png",
+            "sprites/monsters/monster.ash_hound.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.ash_hound.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/monsters/monster.ash_hound.attack.00.png",
+            "sprites/monsters/monster.ash_hound.attack.01.png",
+            "sprites/monsters/monster.ash_hound.attack.02.png",
+            "sprites/monsters/monster.ash_hound.attack.03.png",
+            "sprites/monsters/monster.ash_hound.attack.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.ash_hound.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/monsters/monster.ash_hound.hit.00.png",
+            "sprites/monsters/monster.ash_hound.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/monsters/monster.ash_hound.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/monsters/monster.ash_hound.defeat.00.png",
+            "sprites/monsters/monster.ash_hound.defeat.01.png",
+            "sprites/monsters/monster.ash_hound.defeat.02.png",
+            "sprites/monsters/monster.ash_hound.defeat.03.png",
+            "sprites/monsters/monster.ash_hound.defeat.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.ash_hound.defeat.sheet.png"
+        }
+      },
+      "region": "ashen",
+      "boss": false
+    },
+    "monster.obsidian_golem": {
+      "base": "sprites/monsters/monster.obsidian_golem.png",
+      "size": [
+        64,
+        64
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/monsters/monster.obsidian_golem.idle.00.png",
+            "sprites/monsters/monster.obsidian_golem.idle.01.png",
+            "sprites/monsters/monster.obsidian_golem.idle.02.png",
+            "sprites/monsters/monster.obsidian_golem.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.obsidian_golem.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/monsters/monster.obsidian_golem.attack.00.png",
+            "sprites/monsters/monster.obsidian_golem.attack.01.png",
+            "sprites/monsters/monster.obsidian_golem.attack.02.png",
+            "sprites/monsters/monster.obsidian_golem.attack.03.png",
+            "sprites/monsters/monster.obsidian_golem.attack.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.obsidian_golem.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/monsters/monster.obsidian_golem.hit.00.png",
+            "sprites/monsters/monster.obsidian_golem.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/monsters/monster.obsidian_golem.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/monsters/monster.obsidian_golem.defeat.00.png",
+            "sprites/monsters/monster.obsidian_golem.defeat.01.png",
+            "sprites/monsters/monster.obsidian_golem.defeat.02.png",
+            "sprites/monsters/monster.obsidian_golem.defeat.03.png",
+            "sprites/monsters/monster.obsidian_golem.defeat.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.obsidian_golem.defeat.sheet.png"
+        }
+      },
+      "region": "ashen",
+      "boss": false
+    },
+    "monster.ember_wisp": {
+      "base": "sprites/monsters/monster.ember_wisp.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        0.5
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/monsters/monster.ember_wisp.idle.00.png",
+            "sprites/monsters/monster.ember_wisp.idle.01.png",
+            "sprites/monsters/monster.ember_wisp.idle.02.png",
+            "sprites/monsters/monster.ember_wisp.idle.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/monsters/monster.ember_wisp.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/monsters/monster.ember_wisp.attack.00.png",
+            "sprites/monsters/monster.ember_wisp.attack.01.png",
+            "sprites/monsters/monster.ember_wisp.attack.02.png",
+            "sprites/monsters/monster.ember_wisp.attack.03.png",
+            "sprites/monsters/monster.ember_wisp.attack.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.ember_wisp.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/monsters/monster.ember_wisp.hit.00.png",
+            "sprites/monsters/monster.ember_wisp.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/monsters/monster.ember_wisp.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/monsters/monster.ember_wisp.defeat.00.png",
+            "sprites/monsters/monster.ember_wisp.defeat.01.png",
+            "sprites/monsters/monster.ember_wisp.defeat.02.png",
+            "sprites/monsters/monster.ember_wisp.defeat.03.png",
+            "sprites/monsters/monster.ember_wisp.defeat.04.png"
+          ],
+          "frameCount": 5,
+          "sheet": "sprites/monsters/monster.ember_wisp.defeat.sheet.png"
+        }
+      },
+      "region": "ashen",
+      "boss": false
+    },
+    "monster.ember_wyvern": {
+      "base": "sprites/bosses/monster.ember_wyvern.png",
+      "size": [
+        128,
+        128
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "states": {
+        "idle": {
+          "frames": [
+            "sprites/bosses/monster.ember_wyvern.idle.00.png",
+            "sprites/bosses/monster.ember_wyvern.idle.01.png",
+            "sprites/bosses/monster.ember_wyvern.idle.02.png"
+          ],
+          "frameCount": 3,
+          "sheet": "sprites/bosses/monster.ember_wyvern.idle.sheet.png"
+        },
+        "attack": {
+          "frames": [
+            "sprites/bosses/monster.ember_wyvern.attack.00.png",
+            "sprites/bosses/monster.ember_wyvern.attack.01.png",
+            "sprites/bosses/monster.ember_wyvern.attack.02.png"
+          ],
+          "frameCount": 3,
+          "sheet": "sprites/bosses/monster.ember_wyvern.attack.sheet.png"
+        },
+        "hit": {
+          "frames": [
+            "sprites/bosses/monster.ember_wyvern.hit.00.png",
+            "sprites/bosses/monster.ember_wyvern.hit.01.png"
+          ],
+          "frameCount": 2,
+          "sheet": "sprites/bosses/monster.ember_wyvern.hit.sheet.png"
+        },
+        "defeat": {
+          "frames": [
+            "sprites/bosses/monster.ember_wyvern.defeat.00.png",
+            "sprites/bosses/monster.ember_wyvern.defeat.01.png",
+            "sprites/bosses/monster.ember_wyvern.defeat.02.png",
+            "sprites/bosses/monster.ember_wyvern.defeat.03.png"
+          ],
+          "frameCount": 4,
+          "sheet": "sprites/bosses/monster.ember_wyvern.defeat.sheet.png"
+        }
+      },
+      "region": "ashen",
+      "boss": true,
+      "partBreak": "sprites/bosses/monster.ember_wyvern.part_break.png"
+    }
+  },
+  "icons": {
+    "equipment.moss_hood": {
+      "path": "sprites/items/equipment.moss_hood.png",
+      "size": [
+        32,
+        32
+      ]
+    },
+    "equipment.mossweave_vest": {
+      "path": "sprites/items/equipment.mossweave_vest.png",
+      "size": [
+        32,
+        32
+      ]
+    },
+    "equipment.moss_boots": {
+      "path": "sprites/items/equipment.moss_boots.png",
+      "size": [
+        32,
+        32
+      ]
+    },
+    "equipment.crystal_helm": {
+      "path": "sprites/items/equipment.crystal_helm.png",
+      "size": [
+        32,
+        32
+      ]
+    },
+    "equipment.crystal_plate": {
+      "path": "sprites/items/equipment.crystal_plate.png",
+      "size": [
+        32,
+        32
+      ]
+    },
+    "equipment.crystal_greaves": {
+      "path": "sprites/items/equipment.crystal_greaves.png",
+      "size": [
+        32,
+        32
+      ]
+    },
+    "equipment.ashen_helm": {
+      "path": "sprites/items/equipment.ashen_helm.png",
+      "size": [
+        32,
+        32
+      ]
+    },
+    "equipment.ashen_plate": {
+      "path": "sprites/items/equipment.ashen_plate.png",
+      "size": [
+        32,
+        32
+      ]
+    },
+    "equipment.ashen_greaves": {
+      "path": "sprites/items/equipment.ashen_greaves.png",
+      "size": [
+        32,
+        32
+      ]
+    },
+    "material.moss_gel": {
+      "path": "sprites/items/material.moss_gel.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.moss_tuft": {
+      "path": "sprites/items/material.moss_tuft.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.verdant_leaf": {
+      "path": "sprites/items/material.verdant_leaf.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.ancient_vine": {
+      "path": "sprites/items/material.ancient_vine.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.ancient_log": {
+      "path": "sprites/items/material.ancient_log.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.ancient_bark": {
+      "path": "sprites/items/material.ancient_bark.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.sporecap": {
+      "path": "sprites/items/material.sporecap.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.fungal_spore": {
+      "path": "sprites/items/material.fungal_spore.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.boar_tusk": {
+      "path": "sprites/items/material.boar_tusk.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.bristle_pelt": {
+      "path": "sprites/items/material.bristle_pelt.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.golem_core": {
+      "path": "sprites/items/material.golem_core.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.crystal_shard": {
+      "path": "sprites/items/material.crystal_shard.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.bat_wing": {
+      "path": "sprites/items/material.bat_wing.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.stalagmite_fragment": {
+      "path": "sprites/items/material.stalagmite_fragment.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.serpent_scale": {
+      "path": "sprites/items/material.serpent_scale.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.gloom_silk": {
+      "path": "sprites/items/material.gloom_silk.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.spider_venom": {
+      "path": "sprites/items/material.spider_venom.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.obsidian_chunk": {
+      "path": "sprites/items/material.obsidian_chunk.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.molten_heart": {
+      "path": "sprites/items/material.molten_heart.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.ember_essence": {
+      "path": "sprites/items/material.ember_essence.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "material.wyvern_scale": {
+      "path": "sprites/items/material.wyvern_scale.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "skill.blade_mastery": {
+      "path": "sprites/ui/skill.blade_mastery.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "skill.iron_guard": {
+      "path": "sprites/ui/skill.iron_guard.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "skill.fleet_foot": {
+      "path": "sprites/ui/skill.fleet_foot.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "skill.keen_eye": {
+      "path": "sprites/ui/skill.keen_eye.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "skill.critical_strike": {
+      "path": "sprites/ui/skill.critical_strike.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "skill.arcane_focus": {
+      "path": "sprites/ui/skill.arcane_focus.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "skill.monster_lore": {
+      "path": "sprites/ui/skill.monster_lore.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "skill.recovery": {
+      "path": "sprites/ui/skill.recovery.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    },
+    "skill.crystal_attunement": {
+      "path": "sprites/ui/skill.crystal_attunement.png",
+      "size": [
+        16,
+        16
+      ],
+      "idProvisional": true
+    }
+  },
+  "backgrounds": {
+    "forest": {
+      "path": "sprites/backgrounds/map.forest.png",
+      "size": [
+        720,
+        405
+      ],
+      "parallax": false
+    },
+    "caverns": {
+      "path": "sprites/backgrounds/map.caverns.png",
+      "size": [
+        720,
+        405
+      ],
+      "parallax": false
+    },
+    "ashen": {
+      "path": "sprites/backgrounds/map.ashen.png",
+      "size": [
+        720,
+        405
+      ],
+      "parallax": false
+    }
+  },
+  "tiles": {
+    "forest": {
+      "path": "sprites/backgrounds/tile.forest.ground.png",
+      "size": [
+        16,
+        16
+      ]
+    },
+    "caverns": {
+      "path": "sprites/backgrounds/tile.caverns.ground.png",
+      "size": [
+        16,
+        16
+      ]
+    },
+    "ashen": {
+      "path": "sprites/backgrounds/tile.ashen.ground.png",
+      "size": [
+        16,
+        16
+      ]
+    }
+  },
+  "ui": {
+    "slot.common": {
+      "path": "sprites/ui/slot.common.png",
+      "size": [
+        16,
+        16
+      ]
+    },
+    "slot.forest": {
+      "path": "sprites/ui/slot.forest.png",
+      "size": [
+        16,
+        16
+      ]
+    },
+    "slot.crystal": {
+      "path": "sprites/ui/slot.crystal.png",
+      "size": [
+        16,
+        16
+      ]
+    },
+    "slot.ashen": {
+      "path": "sprites/ui/slot.ashen.png",
+      "size": [
+        16,
+        16
+      ]
+    },
+    "slot.legendary": {
+      "path": "sprites/ui/slot.legendary.png",
+      "size": [
+        16,
+        16
+      ]
+    },
+    "hp.bar.frame": {
+      "path": "sprites/ui/hp.bar.frame.png",
+      "size": [
+        128,
+        16
+      ],
+      "nineSlice": {
+        "left": 8,
+        "right": 8,
+        "top": 4,
+        "bottom": 4
+      }
+    },
+    "hp.bar.fill": {
+      "path": "sprites/ui/hp.bar.fill.png",
+      "size": [
+        128,
+        16
+      ],
+      "nineSlice": null
+    },
+    "defense.bar.frame": {
+      "path": "sprites/ui/defense.bar.frame.png",
+      "size": [
+        128,
+        16
+      ],
+      "nineSlice": {
+        "left": 8,
+        "right": 8,
+        "top": 4,
+        "bottom": 4
+      }
+    },
+    "defense.bar.fill": {
+      "path": "sprites/ui/defense.bar.fill.png",
+      "size": [
+        128,
+        16
+      ],
+      "nineSlice": null
+    }
+  },
+  "notes": [
+    "21 material names and 9 skill names are proposed IDs because the source prompt did not give exact game-data IDs.",
+    "Frames are extracted and palette-normalized from generated concept art; review/retouch details in Aseprite for final production use.",
+    "All game-facing sprite canvases use exact specified dimensions and binary transparent RGBA."
+  ]
+}
