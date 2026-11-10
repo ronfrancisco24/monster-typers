@@ -30,6 +30,7 @@ pub struct GameSave {
     pub owned_equipment: Vec<String>,
     pub equipment_loadout: HashMap<String, String>,
     pub unlocked_maps: Vec<String>,
+    pub defeated_monsters: Vec<String>,
 }
 
 #[derive(serde::Deserialize, serde::Serialize, Clone)]
@@ -95,6 +96,10 @@ pub fn migrate(conn: &Connection) -> rusqlite::Result<()> {
     if version < 5 {
         conn.execute_batch(include_str!("migrations/005_unlocked_maps.sql"))?;
         conn.pragma_update(None, "user_version", 5)?;
+    }
+    if version < 6 {
+        conn.execute_batch(include_str!("migrations/006_defeated_monsters.sql"))?;
+        conn.pragma_update(None, "user_version", 6)?;
     }
     Ok(())
 }
@@ -422,6 +427,30 @@ pub fn unlock_map(conn: &mut Connection, map_id: &str) -> Result<(), String> {
     Ok(())
 }
 
+pub fn load_defeated_monsters(conn: &Connection) -> rusqlite::Result<Vec<String>> {
+    let mut stmt = conn.prepare("SELECT monster_id FROM defeated_monsters ORDER BY monster_id")?;
+    let rows = stmt.query_map([], |row| row.get::<_, String>(0))?;
+    let mut out = Vec::new();
+    for row in rows {
+        out.push(row?);
+    }
+    Ok(out)
+}
+
+pub fn record_monster_defeat(conn: &mut Connection, monster_id: &str) -> Result<(), String> {
+    if monster_id.trim().is_empty() {
+        return Err("invalid monster_id".to_string());
+    }
+    let tx = conn.transaction().map_err(|e| e.to_string())?;
+    tx.execute(
+        "INSERT OR IGNORE INTO defeated_monsters (monster_id, defeated_at) VALUES (?1, strftime('%Y-%m-%dT%H:%M:%SZ','now'))",
+        params![monster_id],
+    )
+    .map_err(|e| e.to_string())?;
+    tx.commit().map_err(|e| e.to_string())?;
+    Ok(())
+}
+
 pub fn purchase_skill_rank(
     conn: &mut Connection,
     skill_id: &str,
@@ -731,7 +760,7 @@ mod tests {
         let version: i64 = conn
             .pragma_query_value(None, "user_version", |r| r.get(0))
             .unwrap();
-        assert_eq!(version, 5);
+        assert_eq!(version, 6);
 
         let history: i64 = conn
             .query_row("SELECT COUNT(*) FROM hunt_history", [], |r| r.get(0))
@@ -764,6 +793,10 @@ mod tests {
             .query_row("SELECT COUNT(*) FROM unlocked_maps", [], |r| r.get(0))
             .unwrap();
         assert_eq!(unlocked, 1);
+        let defeated: i64 = conn
+            .query_row("SELECT COUNT(*) FROM defeated_monsters", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(defeated, 0);
     }
 
     #[test]
@@ -775,7 +808,7 @@ mod tests {
         let version: i64 = conn
             .pragma_query_value(None, "user_version", |r| r.get(0))
             .unwrap();
-        assert_eq!(version, 5);
+        assert_eq!(version, 6);
         let count: i64 = conn
             .query_row("SELECT COUNT(*) FROM hunt_history", [], |r| r.get(0))
             .unwrap();
@@ -1108,6 +1141,17 @@ mod tests {
             )
             .unwrap();
         assert_eq!(qty, 1);
+    }
+
+    #[test]
+    fn record_monster_defeat_is_idempotent() {
+        let mut conn = setup();
+        record_monster_defeat(&mut conn, "monster.moss_slime").unwrap();
+        record_monster_defeat(&mut conn, "monster.moss_slime").unwrap();
+        let count: i64 = conn
+            .query_row("SELECT COUNT(*) FROM defeated_monsters", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(count, 1);
     }
 
     #[test]

@@ -87,4 +87,26 @@ describe('content catalog', () => {
     expect(rate).toBeGreaterThan(0.2);
     expect(rate).toBeLessThan(0.32);
   });
+
+  it('encounters differ by region in cadence and difficulty', () => {
+    const forest = monsters.filter((m) => m.mapId === 'map.verdant_forest' && !m.isBoss);
+    const caverns = monsters.filter((m) => m.mapId === 'map.crystal_caverns' && !m.isBoss);
+    const ashen = monsters.filter((m) => m.mapId === 'map.ashen_wastes' && !m.isBoss);
+    const avgCadence = (ms: typeof forest) => ms.reduce((a, m) => a + m.attackCadenceMs, 0) / ms.length;
+    expect(avgCadence(forest)).toBeGreaterThan(avgCadence(caverns));
+    expect(avgCadence(caverns)).toBeGreaterThan(avgCadence(ashen));
+    // bosses have more HP than standards in their region
+    for (const map of maps) {
+      const boss = monsters.find((m) => m.id === map.bossId)!;
+      const standards = map.monsterIds.map((id) => monsters.find((m) => m.id === id)!);
+      for (const s of standards) {
+        expect(boss.hp).toBeGreaterThan(s.hp);
+      }
+    }
+    // at least one breakable part per region
+    for (const map of maps) {
+      const regionMonsters = [...map.monsterIds, map.bossId].map((id) => monsters.find((m) => m.id === id)!);
+      expect(regionMonsters.some((m) => m.breakPart !== undefined)).toBe(true);
+    }
+  });
 });

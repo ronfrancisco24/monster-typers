@@ -27,12 +27,12 @@ All three hunting regions, twelve monsters, three distinct boss encounters, nine
 - [x] Wastes introduces longer words, faster cadence, and stronger consequences for errors.
 - [x] Give each boss at least one recognizable phase change.
 - [x] Give at least selected monsters a breakable part and a useful exclusive drop.
-- [ ] Test that encounters differ in timing, mechanics, or resource goals (not only HP).
+- [x] Test that encounters differ in timing, mechanics, or resource goals (not only HP).
 
 ### 3. Unlock progression
 
 - [x] Start with Forest unlocked.
-- [ ] Unlock a map's boss after winning against all three standard monsters there.
+- [x] Unlock a map's boss after winning against all three standard monsters there.
 - [x] Defeating Grove Guardian unlocks Caverns.
 - [x] Defeating Crystal Serpent unlocks Wastes.
 - [x] Persist unlocked maps and protect against duplicate unlock/reward events.

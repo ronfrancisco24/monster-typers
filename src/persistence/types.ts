@@ -19,6 +19,7 @@ export type GameSave = {
   owned_equipment: string[];
   equipment_loadout: Record<string, string>;
   unlocked_maps: string[];
+  defeated_monsters: string[];
 };
 
 export type CraftEquipmentInput = {

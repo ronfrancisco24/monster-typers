@@ -8,7 +8,7 @@ import { calculateHuntRewards } from '../../game/domain/rewards';
 import { getMaterial } from '../../content/materials';
 import { equipmentForLoadout, equipmentSets } from '../../content/equipment';
 import { maps } from '../../content/maps';
-import { finalizeHunt, loadGameSave, reconcileProgression, unlockMap } from '../../persistence/gameRepository';
+import { finalizeHunt, loadGameSave, reconcileProgression, recordMonsterDefeat, unlockMap } from '../../persistence/gameRepository';
 import type { FinalizedHunt, PlayerProfile } from '../../persistence/types';
 import { levelFromXp } from '../../game/domain/progression';
 import { deriveHunterStats } from '../../game/domain/stats';
@@ -198,10 +198,14 @@ export default function HuntScreen({
     settledRef.current = state.huntId;
 
     const outcome = state.status as 'victory' | 'defeat' | 'abandoned';
-    if (outcome === 'victory' && monster.isBoss) {
-      const nextMap = maps.find((m) => m.unlockRequirement.type === 'boss' && m.unlockRequirement.bossId === monster.id);
-      if (nextMap) {
-        void unlockMap(nextMap.id);
+    if (outcome === 'victory') {
+      if (monster.isBoss) {
+        const nextMap = maps.find((m) => m.unlockRequirement.type === 'boss' && m.unlockRequirement.bossId === monster.id);
+        if (nextMap) {
+          void unlockMap(nextMap.id);
+        }
+      } else {
+        void recordMonsterDefeat(monster.id);
       }
     }
     const rewards = calculateHuntRewards({

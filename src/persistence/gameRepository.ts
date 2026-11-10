@@ -30,6 +30,10 @@ export async function unlockMap(mapId: string): Promise<void> {
   await invoke<void>('unlock_map', { mapId });
 }
 
+export async function recordMonsterDefeat(monsterId: string): Promise<void> {
+  await invoke<void>('record_monster_defeat', { monsterId });
+}
+
 export async function craftEquipment(input: CraftEquipmentInput): Promise<{ inventory: InventoryEntry[]; owned: string[] }> {
   const result = await invoke<[InventoryEntry[], string[]]>('craft_equipment', { input });
   return { inventory: result[0], owned: result[1] };

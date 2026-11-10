@@ -22,6 +22,7 @@ function materialLabel(id: string): string {
 export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, onOpenCrafting, onOpenEquipment }: Props) {
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [unlockedMaps, setUnlockedMaps] = useState<string[]>(['map.verdant_forest']);
+  const [defeatedMonsters, setDefeatedMonsters] = useState<string[]>([]);
 
   useEffect(() => {
     loadGameSave()
@@ -39,6 +40,7 @@ export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, 
           setProfile(save.profile);
         }
         setUnlockedMaps(save.unlocked_maps && save.unlocked_maps.length ? save.unlocked_maps : ['map.verdant_forest']);
+        setDefeatedMonsters(save.defeated_monsters ?? []);
       })
       .catch(() => {});
   }, []);
@@ -122,30 +124,46 @@ export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, 
                       </article>
                     );
                   })}
-                  {boss && (
-                    <article key={boss.id} className="monster-card monster-card--boss">
-                      <div className="monster-card__header">
-                        <h2 className="monster-card__name">{boss.name}</h2>
-                        <span className="difficulty difficulty--hard">boss</span>
-                      </div>
-                      <dl className="monster-card__stats">
-                        <div><dt>Health</dt><dd>{boss.hp}</dd></div>
-                        <div><dt>Attack</dt><dd>{boss.attackDamage}</dd></div>
-                        <div><dt>Cadence</dt><dd>{boss.attackCadenceMs / 1000}s</dd></div>
-                      </dl>
-                      <div className="monster-card__materials">
-                        <span className="monster-card__materials-label">Possible materials</span>
-                        <div className="material-chips">
-                          {(boss.drops?.map((d) => d.materialId) ?? []).map((materialId) => (
-                            <span key={materialId} className="material-chip">{materialLabel(materialId)}</span>
-                          ))}
+                  {boss && (() => {
+                    const bossUnlocked = map.monsterIds.every((id) => defeatedMonsters.includes(id));
+                    if (!bossUnlocked) {
+                      return (
+                        <article key={boss.id} className="monster-card monster-card--boss monster-card--locked">
+                          <div className="monster-card__header">
+                            <h2 className="monster-card__name">{boss.name}</h2>
+                            <span className="difficulty difficulty--hard">boss</span>
+                          </div>
+                          <p className="map-section__locked">
+                            Defeat all 3 standard monsters in this region to unlock.
+                          </p>
+                        </article>
+                      );
+                    }
+                    return (
+                      <article key={boss.id} className="monster-card monster-card--boss">
+                        <div className="monster-card__header">
+                          <h2 className="monster-card__name">{boss.name}</h2>
+                          <span className="difficulty difficulty--hard">boss</span>
                         </div>
-                      </div>
-                      <button type="button" className="btn btn--primary monster-card__start" onClick={() => onStartHunt(boss)}>
-                        Start Hunt
-                      </button>
-                    </article>
-                  )}
+                        <dl className="monster-card__stats">
+                          <div><dt>Health</dt><dd>{boss.hp}</dd></div>
+                          <div><dt>Attack</dt><dd>{boss.attackDamage}</dd></div>
+                          <div><dt>Cadence</dt><dd>{boss.attackCadenceMs / 1000}s</dd></div>
+                        </dl>
+                        <div className="monster-card__materials">
+                          <span className="monster-card__materials-label">Possible materials</span>
+                          <div className="material-chips">
+                            {(boss.drops?.map((d) => d.materialId) ?? []).map((materialId) => (
+                              <span key={materialId} className="material-chip">{materialLabel(materialId)}</span>
+                            ))}
+                          </div>
+                        </div>
+                        <button type="button" className="btn btn--primary monster-card__start" onClick={() => onStartHunt(boss)}>
+                          Start Hunt
+                        </button>
+                      </article>
+                    );
+                  })()}
                 </>
               )}
             </section>

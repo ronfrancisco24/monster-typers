@@ -1,7 +1,7 @@
 mod commands;
 mod db;
 
-use commands::{craft_equipment, finalize_hunt, load_game_save, purchase_skill_rank, reconcile_progression, set_equipment, set_setting, unlock_map};
+use commands::{craft_equipment, finalize_hunt, load_game_save, purchase_skill_rank, reconcile_progression, record_monster_defeat, set_equipment, set_setting, unlock_map};
 use db::Db;
 use tauri::Manager;
 
@@ -29,7 +29,7 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![craft_equipment, finalize_hunt, load_game_save, purchase_skill_rank, reconcile_progression, set_equipment, set_setting, unlock_map])
+        .invoke_handler(tauri::generate_handler![craft_equipment, finalize_hunt, load_game_save, purchase_skill_rank, reconcile_progression, record_monster_defeat, set_equipment, set_setting, unlock_map])
         .run(tauri::generate_context!())
         .expect("error while building tauri application");
 }
