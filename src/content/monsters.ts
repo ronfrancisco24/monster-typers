@@ -53,3 +53,43 @@ export const bristleBoar: MonsterDefinition = {
     { materialId: 'material.boar_fang', chance: 0.35, minQuantity: 1, maxQuantity: 1 },
   ],
 };
+
+export type MaterialSource = {
+  monsterId: string;
+  monsterName: string;
+  kind: 'drop' | 'break';
+  chance: number;
+  minQuantity: number;
+  maxQuantity: number;
+};
+
+export const monsters: readonly MonsterDefinition[] = [mossSlime, bristleBoar];
+
+export function materialSources(materialId: string): MaterialSource[] {
+  const out: MaterialSource[] = [];
+  for (const monster of monsters) {
+    for (const drop of monster.drops ?? []) {
+      if (drop.materialId === materialId) {
+        out.push({
+          monsterId: monster.id,
+          monsterName: monster.name,
+          kind: 'drop',
+          chance: drop.chance,
+          minQuantity: drop.minQuantity,
+          maxQuantity: drop.maxQuantity,
+        });
+      }
+    }
+    if (monster.breakPart?.bonusMaterialId === materialId) {
+      out.push({
+        monsterId: monster.id,
+        monsterName: monster.name,
+        kind: 'break',
+        chance: 1,
+        minQuantity: 1,
+        maxQuantity: 1,
+      });
+    }
+  }
+  return out;
+}

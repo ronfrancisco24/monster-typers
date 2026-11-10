@@ -15,6 +15,19 @@ export type GameSave = {
   profile: PlayerProfile;
   settings: Record<string, string>;
   inventory: InventoryEntry[];
+  skill_ranks: Record<string, number>;
+  owned_equipment: string[];
+  equipment_loadout: Record<string, string>;
+};
+
+export type CraftEquipmentInput = {
+  equipment_id: string;
+  requirements: { material_id: string; quantity: number }[];
+};
+
+export type CraftedEquipmentResult = {
+  inventory: InventoryEntry[];
+  owned_equipment: string[];
 };
 
 export type FinalizeHuntInput = {
@@ -27,6 +40,8 @@ export type FinalizeHuntInput = {
   incorrect_keystrokes: number;
   words_completed: number;
   xp_awarded: number;
+  hunter_level: number;
+  unspent_skill_points: number;
   loot: { material_id: string; quantity: number }[];
   broken_part_ids: string[];
 };
@@ -35,8 +50,10 @@ export type FinalizedHunt = {
   hunt_id: string;
   outcome: string;
   xp_awarded: number;
+  hunter_level: number;
+  total_xp: number;
+  unspent_skill_points: number;
   loot: { material_id: string; quantity: number }[];
   broken_part_ids: string[];
-  total_xp: number;
   completed_at: string;
 };

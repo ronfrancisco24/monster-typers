@@ -1,23 +1,38 @@
 import { useEffect, useRef, useState } from 'react';
 import { PhaserViewport, type PhaserViewportHandle } from '../components/PhaserViewport';
-import { loadGameSave } from '../../persistence/gameRepository';
 import { mossSlime } from '../../content/monsters';
 import { hunterDefinition } from '../../content/hunter';
 import { createHuntController, type HuntController } from '../../game/controller/huntController';
 import type { MonsterDefinition } from '../../game/domain/types';
 import { calculateHuntRewards } from '../../game/domain/rewards';
 import { getMaterial } from '../../content/materials';
-import { finalizeHunt } from '../../persistence/gameRepository';
-import type { FinalizedHunt } from '../../persistence/types';
+import { equipmentForLoadout, equipmentSets } from '../../content/equipment';
+import { finalizeHunt, loadGameSave, reconcileProgression } from '../../persistence/gameRepository';
+import type { FinalizedHunt, PlayerProfile } from '../../persistence/types';
+import { levelFromXp } from '../../game/domain/progression';
+import { deriveHunterStats } from '../../game/domain/stats';
+import type { DerivedHunterStats } from '../../game/domain/stats';
 
 type Flash = 'hit' | 'miss' | 'monster' | null;
 
-function makeController(monster: MonsterDefinition): HuntController {
+function baseDerivedStats(): DerivedHunterStats {
+  return deriveHunterStats(
+    { maxHp: hunterDefinition.baseMaxHp, attackDamage: hunterDefinition.baseAttackDamage },
+    [],
+    {},
+  );
+}
+
+function makeController(monster: MonsterDefinition, stats: DerivedHunterStats = baseDerivedStats()): HuntController {
+  const adjustedMonster: MonsterDefinition = {
+    ...monster,
+    defenseWindowMs: (monster.defenseWindowMs ?? 0) + stats.defenseWindowBonusMs,
+  };
   return createHuntController({
     huntId: crypto.randomUUID(),
-    monster,
-    playerMaxHp: hunterDefinition.baseMaxHp,
-    baseAttackDamage: hunterDefinition.baseAttackDamage,
+    monster: adjustedMonster,
+    playerMaxHp: stats.maxHp,
+    baseAttackDamage: stats.attackDamage,
     now: () => performance.now(),
     random: Math.random,
   });
@@ -49,6 +64,40 @@ export default function HuntScreen({
   >({ status: 'idle' });
   const settledRef = useRef<string | null>(null);
   const [settleTick, setSettleTick] = useState(0);
+  const [profile, setProfile] = useState<PlayerProfile | null>(null);
+  const [skillRanks, setSkillRanks] = useState<Record<string, number>>({});
+  const [loadout, setLoadout] = useState<Record<string, string>>({});
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    loadGameSave()
+      .then((save) => {
+        const computedLevel = levelFromXp(save.profile.total_xp);
+        const computedPoints =
+          save.profile.unspent_skill_points + Math.max(0, computedLevel - save.profile.hunter_level);
+        const apply = (p: PlayerProfile) => {
+          setProfile(p);
+          setSkillRanks(save.skill_ranks);
+          setLoadout(save.equipment_loadout);
+          const stats = deriveHunterStats(
+            { maxHp: hunterDefinition.baseMaxHp, attackDamage: hunterDefinition.baseAttackDamage },
+            equipmentForLoadout(save.equipment_loadout),
+            save.skill_ranks,
+            equipmentSets,
+          );
+          setController(makeController(monster, stats));
+          setReady(true);
+        };
+        if (computedLevel !== save.profile.hunter_level || computedPoints !== save.profile.unspent_skill_points) {
+          reconcileProgression(computedLevel, computedPoints)
+            .then(() => apply({ ...save.profile, hunter_level: computedLevel, unspent_skill_points: computedPoints }))
+            .catch(() => apply(save.profile));
+        } else {
+          apply(save.profile);
+        }
+      })
+      .catch(() => setReady(true));
+  }, []);
   const inputRef = useRef<HTMLInputElement>(null);
   const phaserRef = useRef<PhaserViewportHandle>(null);
   const flashTimer = useRef<number | null>(null);
@@ -143,6 +192,7 @@ export default function HuntScreen({
     const isTerminal =
       state.status === 'victory' || state.status === 'defeat' || state.status === 'abandoned';
     if (!isTerminal) return;
+    if (profile === null) return;
     if (settledRef.current === state.huntId) return;
     settledRef.current = state.huntId;
 
@@ -152,8 +202,20 @@ export default function HuntScreen({
       monster,
       outcome,
       partBroken: state.part?.broken ?? false,
+      gatherChanceBonus: deriveHunterStats(
+        { maxHp: hunterDefinition.baseMaxHp, attackDamage: hunterDefinition.baseAttackDamage },
+        equipmentForLoadout(loadout),
+        skillRanks,
+        equipmentSets,
+      ).rareDropChanceBonus,
     });
     const stats = controller.getStats();
+
+    const currentProfile = profile ?? { hunter_level: 1, total_xp: 0, unspent_skill_points: 0, created_at: '', updated_at: '' };
+    const newTotalXp = currentProfile.total_xp + rewards.xp;
+    const newLevel = levelFromXp(newTotalXp);
+    const gained = Math.max(0, levelFromXp(newTotalXp) - currentProfile.hunter_level);
+    const newPoints = currentProfile.unspent_skill_points + gained;
 
     setSettlement({ status: 'pending' });
     finalizeHunt({
@@ -166,12 +228,23 @@ export default function HuntScreen({
       incorrect_keystrokes: stats.incorrectKeystrokes,
       words_completed: stats.wordsCompleted,
       xp_awarded: rewards.xp,
+      hunter_level: newLevel,
+      unspent_skill_points: newPoints,
       loot: rewards.drops.map((drop) => ({ material_id: drop.materialId, quantity: drop.quantity })),
       broken_part_ids: rewards.brokenPartIds,
     })
-      .then((result) => setSettlement({ status: 'done', result }))
+      .then((result) => {
+        setProfile({
+          hunter_level: result.hunter_level,
+          total_xp: result.total_xp,
+          unspent_skill_points: result.unspent_skill_points,
+          created_at: profile?.created_at ?? '',
+          updated_at: profile?.updated_at ?? '',
+        });
+        setSettlement({ status: 'done', result });
+      })
       .catch((err) => setSettlement({ status: 'error', message: String(err) }));
-  }, [state.status, state.huntId, settleTick, controller, monster]);
+  }, [state.status, state.huntId, settleTick, controller, monster, profile, skillRanks, loadout]);
 
   useEffect(() => {
     if (state.status === 'active') {
@@ -218,7 +291,13 @@ export default function HuntScreen({
   function replay() {
     settledRef.current = null;
     setSettlement({ status: 'idle' });
-    setController(makeController(monster));
+    const stats = deriveHunterStats(
+      { maxHp: hunterDefinition.baseMaxHp, attackDamage: hunterDefinition.baseAttackDamage },
+      equipmentForLoadout(loadout),
+      skillRanks,
+      equipmentSets,
+    );
+    setController(makeController(monster, stats));
   }
 
   const prompt = state.prompt;
@@ -272,9 +351,9 @@ export default function HuntScreen({
 
       {state.status === 'ready' && (
         <section className="panel">
-          <p>Hunter level {hunterLevel}</p>
+          <p>Hunter level {profile?.hunter_level ?? hunterLevel}</p>
           <p>Type the displayed word to attack. React to the monster&apos;s attacks.</p>
-          <button type="button" className="btn btn--primary" onClick={start}>
+          <button type="button" className="btn btn--primary" onClick={start} disabled={!ready}>
             Start Hunt
           </button>
         </section>
@@ -369,6 +448,16 @@ export default function HuntScreen({
                 <span>XP</span>
                 <span>+{settlement.result.xp_awarded}</span>
               </div>
+              <div className="results__row">
+                <span>Level</span>
+                <span>{settlement.result.hunter_level}</span>
+              </div>
+              {settlement.result.unspent_skill_points > 0 && (
+                <div className="results__row">
+                  <span>Skill points</span>
+                  <span>{settlement.result.unspent_skill_points}</span>
+                </div>
+              )}
               {settlement.result.loot.map((drop) => (
                 <div key={drop.material_id} className="results__row">
                   <span>{getMaterial(drop.material_id)?.name ?? drop.material_id}</span>

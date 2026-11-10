@@ -22,6 +22,8 @@ export type RewardInput = {
   monster: MonsterDefinition;
   outcome: HuntOutcome;
   partBroken: boolean;
+  /** Bonus rare-drop chance from gathering skills (0..1). */
+  gatherChanceBonus?: number;
   /** Injectable RNG in [0, 1). Defaults to a seeded source derived from huntId. */
   random?: () => number;
 };
@@ -57,6 +59,7 @@ export function hashString(value: string): number {
  */
 export function calculateHuntRewards(input: RewardInput): HuntRewardSummary {
   const { huntId, monster, outcome, partBroken } = input;
+  const gatherChanceBonus = input.gatherChanceBonus ?? 0;
 
   if (outcome !== 'victory') {
     return {
@@ -74,7 +77,8 @@ export function calculateHuntRewards(input: RewardInput): HuntRewardSummary {
   const drops: MaterialDrop[] = [];
 
   for (const entry of monster.drops ?? []) {
-    if (random() < entry.chance) {
+    const chance = entry.chance < 1 ? Math.min(1, entry.chance + gatherChanceBonus) : entry.chance;
+    if (random() < chance) {
       const span = entry.maxQuantity - entry.minQuantity;
       const quantity = entry.minQuantity + Math.floor(random() * (span + 1));
       if (quantity > 0) {
