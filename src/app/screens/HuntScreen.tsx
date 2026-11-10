@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { PhaserViewport, type PhaserViewportHandle } from '../components/PhaserViewport';
 import { mossSlime } from '../../content/monsters';
 import { hunterDefinition } from '../../content/hunter';
@@ -262,6 +263,27 @@ export default function HuntScreen({
       inputRef.current?.focus();
     }
   }, [state.status, controller]);
+
+  useEffect(() => {
+    let unlisten: (() => void) | undefined;
+    void getCurrentWindow()
+      .onCloseRequested(async (event) => {
+        if (controller.getState().status === 'active') {
+          event.preventDefault();
+          if (window.confirm('Abandon this hunt and close?')) {
+            controller.abandon();
+            sync();
+            await getCurrentWindow().destroy();
+          }
+        }
+      })
+      .then((fn) => {
+        unlisten = fn;
+      });
+    return () => {
+      unlisten?.();
+    };
+  }, [controller]);
 
   function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.ctrlKey || event.metaKey || event.altKey) return;

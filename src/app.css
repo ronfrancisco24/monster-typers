@@ -654,6 +654,24 @@ body {
   color: var(--muted, #9aa4b2);
 }
 
+/* Pixel-art scaling: keep sprites and canvas crisp. */
+canvas,
+img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Reduced-effects preference disables flashes and shake. */
+body.reduced-effects .word--hit .char--done {
+  animation: none;
+  filter: none;
+}
+
+body.reduced-effects .word--shake {
+  animation: none;
+  transform: none;
+}
+
 .equipment-set {
   border: 1px solid var(--border, #2a3344);
   border-radius: 0.5rem;
@@ -720,6 +738,24 @@ body {
   margin: 0;
   font-size: 0.85rem;
   color: var(--muted, #9aa4b2);
+}
+
+/* Pixel-art scaling: keep sprites and canvas crisp. */
+canvas,
+img {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* Reduced-effects preference disables flashes and shake. */
+body.reduced-effects .word--hit .char--done {
+  animation: none;
+  filter: none;
+}
+
+body.reduced-effects .word--shake {
+  animation: none;
+  transform: none;
 }
 
 .equipment-set {
