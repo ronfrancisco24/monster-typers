@@ -26,15 +26,22 @@ export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, 
   const [defeatedMonsters, setDefeatedMonsters] = useState<string[]>([]);
 
   useEffect(() => {
+    // Try to start immediately (may be blocked until a gesture).
+    playMusic('bgm.menu_hearth');
     let started = false;
     const startMusic = () => {
       if (started) return;
       started = true;
       playMusic('bgm.menu_hearth');
-      document.removeEventListener('click', startMusic);
+      document.removeEventListener('pointerdown', startMusic);
+      document.removeEventListener('keydown', startMusic);
     };
-    document.addEventListener('click', startMusic);
-    return () => document.removeEventListener('click', startMusic);
+    document.addEventListener('pointerdown', startMusic);
+    document.addEventListener('keydown', startMusic);
+    return () => {
+      document.removeEventListener('pointerdown', startMusic);
+      document.removeEventListener('keydown', startMusic);
+    };
   }, []);
 
   useEffect(() => {
@@ -84,6 +91,9 @@ export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, 
         </button>
         <button type="button" className="btn" onClick={() => { playUi('select'); onOpenEquipment(); }}>
           Equipment
+        </button>
+        <button type="button" className="btn" onClick={() => { playMusic('bgm.menu_hearth'); playUi('confirm'); }}>
+          Test Audio
         </button>
       </header>
 

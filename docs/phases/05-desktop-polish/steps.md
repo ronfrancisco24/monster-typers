@@ -18,7 +18,7 @@ A stable Windows build with compact idle mode, expanded hunt/menu mode, focus-sa
 - [x] Clamp position to current monitor work area.
 - [ ] Test bottom/top/left/right taskbar layouts where practical.
 - [ ] Test Windows display scaling and multi-monitor setups.
-- [ ] Add manual placement or reset-position control if automatic placement fails.
+- [x] Add manual placement or reset-position control if automatic placement fails.
 - [x] Make always-on-top optional, persisted, and easy to disable.
 - [x] Support hide/show/close controls with no surprise process behavior.
 
@@ -33,13 +33,13 @@ A stable Windows build with compact idle mode, expanded hunt/menu mode, focus-sa
 
 ### 3. Retro presentation and accessibility
 
-- [ ] Replace or refine placeholders only with original/licensed assets.
+- [x] Replace or refine placeholders only with original/licensed assets.
 - [x] Use consistent pixel scaling and prevent sprite interpolation blur.
 - [x] Add useful attack, defense, break, victory, and defeat feedback.
-- [ ] Balance sounds and provide volume/mute settings.
+- [x] Balance sounds and provide volume/mute settings.
 - [x] Add reduced screen shake / effects preferences.
-- [ ] Verify typing text, countdown, and HP are legible at the smallest supported size.
-- [ ] Ensure error/success feedback is distinguishable without relying only on color.
+- [x] Verify typing text, countdown, and HP are legible at the smallest supported size.
+- [x] Ensure error/success feedback is distinguishable without relying only on color.
 
 ### 4. Save safety and packaging
 
@@ -52,7 +52,7 @@ A stable Windows build with compact idle mode, expanded hunt/menu mode, focus-sa
 
 ### 5. Full MVP regression
 
-- [ ] Tutorial can be finished without extra instructions.
+- [x] Tutorial can be finished without extra instructions.
 - [ ] All 12 monsters and 3 maps are reachable.
 - [ ] All nine armor recipes and nine skills work.
 - [ ] Standard hunts hit the intended short-session range.

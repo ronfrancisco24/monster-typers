@@ -31,20 +31,32 @@ function getAudio(key: string): HTMLAudioElement {
   if (!a) {
     a = new Audio(audioPath(key));
     a.preload = 'auto';
+    a.load();
     cache.set(key, a);
   }
   return a;
 }
 
 let muted = false;
-let volume = 0.5;
+let musicVolume = 0.7;
+let sfxVolume = 0.7;
 
 export function setUiMuted(value: boolean): void {
   muted = value;
 }
 
+export function setUiMusicVolume(value: number): void {
+  musicVolume = Math.max(0, Math.min(1, value));
+}
+
+export function setUiSfxVolume(value: number): void {
+  sfxVolume = Math.max(0, Math.min(1, value));
+}
+
 export function setUiVolume(value: number): void {
-  volume = Math.max(0, Math.min(1, value));
+  const v = Math.max(0, Math.min(1, value));
+  musicVolume = v;
+  sfxVolume = v;
 }
 
 export function playUi(key: UiKey): void {
@@ -52,9 +64,11 @@ export function playUi(key: UiKey): void {
   const fullKey = UI_KEY_MAP[key];
   const a = getAudio(fullKey);
   const recommended = key === 'hover' ? 0.13 : key === 'select' ? 0.32 : key === 'back' ? 0.26 : 0.4;
-  a.volume = recommended * volume;
+  a.volume = recommended * sfxVolume;
   a.currentTime = 0;
-  void a.play().catch(() => {});
+  const attempt = () => void a.play().catch((e) => console.warn('uiAudio play failed', fullKey, e));
+  if (a.readyState >= 3) attempt();
+  else a.addEventListener('canplaythrough', attempt, { once: true });
 }
 
 let currentMusic: HTMLAudioElement | null = null;
@@ -68,11 +82,21 @@ export function playMusic(key: MusicKey): void {
     currentMusic.currentTime = 0;
   }
   const a = getAudio(key);
-  const recommended = key === 'bgm.hunt_victory' ? 0.38 : 0.28;
-  a.volume = recommended * volume;
+  const recommended = key === 'bgm.hunt_victory' ? 0.45 : 0.4;
+  a.volume = recommended * musicVolume;
   a.loop = key !== 'bgm.hunt_victory';
   a.currentTime = 0;
-  void a.play().catch(() => {});
+  const attempt = () => {
+    void a.play().catch((err) => {
+      console.warn('uiAudio play failed', key, err);
+      // retry once when loaded
+      a.addEventListener('canplaythrough', () => {
+        void a.play().catch((e) => console.warn('uiAudio retry failed', key, e));
+      }, { once: true });
+    });
+  };
+  if (a.readyState >= 3) attempt();
+  else a.addEventListener('canplaythrough', attempt, { once: true });
   currentMusic = a;
   currentMusicKey = key;
 }
@@ -85,3 +109,5 @@ export function stopMusic(): void {
     currentMusicKey = null;
   }
 }
+
+

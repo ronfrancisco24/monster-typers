@@ -97,6 +97,10 @@ body {
 
 .titlebar__drag {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.85rem;
   color: var(--muted);
   cursor: default;
@@ -111,11 +115,14 @@ body {
   border: none;
   background: transparent;
   color: var(--text);
-  width: 2rem;
+  width: auto;
+  min-width: 1.6rem;
   height: 1.5rem;
+  padding: 0 0.35rem;
   border-radius: 0;
   cursor: pointer;
   font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 .titlebar__btn:hover {
@@ -140,6 +147,22 @@ body {
   height: 1.2rem;
   accent-color: var(--accent);
   cursor: pointer;
+}
+
+.titlebar__vol-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+@media (max-width: 420px) {
+  .titlebar__vol-label,
+  .titlebar__btn--fx,
+  .titlebar__btn--pos {
+    display: none;
+  }
 }
 
 .phaser-viewport {
@@ -265,7 +288,9 @@ body {
 
 .char--error {
   color: var(--danger);
-  text-decoration-color: var(--danger);
+  text-decoration: underline wavy var(--danger);
+  text-decoration-thickness: 2px;
+  font-weight: 700;
 }
 
 .word--hit .char--done {
@@ -748,17 +773,6 @@ img {
   image-rendering: crisp-edges;
 }
 
-/* Reduced-effects preference disables flashes and shake. */
-body.reduced-effects .word--hit .char--done {
-  animation: none;
-  filter: none;
-}
-
-body.reduced-effects .word--shake {
-  animation: none;
-  transform: none;
-}
-
 .equipment-set {
   border: 1px solid var(--border, #2a3344);
   border-radius: 0;
@@ -1070,6 +1084,34 @@ body.reduced-effects .word--shake {
 
 .monster-card--boss {
   border-color: var(--accent, #60a5fa);
+}
+
+/* Compact window legibility */
+@media (max-width: 320px) {
+  .word {
+    font-size: 1.25rem;
+    letter-spacing: 0.12rem;
+  }
+  .hp__value,
+  .defense-banner__countdown {
+    font-size: 0.85rem;
+  }
+}
+
+.hunt-help {
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--muted, #9aa4b2);
+}
+
+.hunt-help summary {
+  cursor: pointer;
+  color: var(--accent, #60a5fa);
+}
+
+.hunt-help ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
 }
 .skill-card__maxed {
   margin: 0;
@@ -1084,17 +1126,6 @@ img {
   image-rendering: crisp-edges;
 }
 
-/* Reduced-effects preference disables flashes and shake. */
-body.reduced-effects .word--hit .char--done {
-  animation: none;
-  filter: none;
-}
-
-body.reduced-effects .word--shake {
-  animation: none;
-  transform: none;
-}
-
 .equipment-set {
   border: 1px solid var(--border, #2a3344);
   border-radius: 0;
@@ -1406,5 +1437,33 @@ body.reduced-effects .word--shake {
 
 .monster-card--boss {
   border-color: var(--accent, #60a5fa);
+}
+
+/* Compact window legibility */
+@media (max-width: 320px) {
+  .word {
+    font-size: 1.25rem;
+    letter-spacing: 0.12rem;
+  }
+  .hp__value,
+  .defense-banner__countdown {
+    font-size: 0.85rem;
+  }
+}
+
+.hunt-help {
+  margin: 0.5rem 0;
+  font-size: 0.85rem;
+  color: var(--muted, #9aa4b2);
+}
+
+.hunt-help summary {
+  cursor: pointer;
+  color: var(--accent, #60a5fa);
+}
+
+.hunt-help ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
 }
 

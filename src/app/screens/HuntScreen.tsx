@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getCurrentWindow } from '@tauri-apps/api/window';
+import { isTauri } from '@tauri-apps/api/core';
 import { PhaserViewport, type PhaserViewportHandle } from '../components/PhaserViewport';
 import { mossSlime } from '../../content/monsters';
 import { hunterDefinition } from '../../content/hunter';
@@ -13,6 +14,7 @@ import { finalizeHunt, loadGameSave, reconcileProgression, recordMonsterDefeat, 
 import type { FinalizedHunt, PlayerProfile } from '../../persistence/types';
 import { levelFromXp } from '../../game/domain/progression';
 import { deriveHunterStats } from '../../game/domain/stats';
+import { stopMusic as stopMenuMusic } from '../../platform/uiAudio';
 import type { DerivedHunterStats } from '../../game/domain/stats';
 
 type Flash = 'hit' | 'miss' | 'monster' | null;
@@ -80,6 +82,21 @@ export default function HuntScreen({
   }, [ready, controller, loadout]);
 
   useEffect(() => {
+    const unlock = () => phaserRef.current?.unlockAudio();
+    document.addEventListener('pointerdown', unlock, { once: true });
+    document.addEventListener('keydown', unlock, { once: true });
+    return () => {
+      document.removeEventListener('pointerdown', unlock);
+      document.removeEventListener('keydown', unlock);
+    };
+  }, []);
+
+  // Stop the Hub's menu music when entering a hunt.
+  useEffect(() => {
+    stopMenuMusic();
+  }, []);
+
+  useEffect(() => {
     loadGameSave()
       .then((save) => {
         const computedLevel = levelFromXp(save.profile.total_xp);
@@ -89,7 +106,9 @@ export default function HuntScreen({
           setProfile(p);
           setSkillRanks(save.skill_ranks);
           setLoadout(save.equipment_loadout);
-          phaserRef.current?.applyAudioSettings(save.settings['audio.muted'] === 'true', parseFloat(save.settings['audio.volume'] ?? '0.5'));
+          const mv = parseFloat(save.settings['audio.music_volume'] ?? save.settings['audio.volume'] ?? '0.5');
+          const sv = parseFloat(save.settings['audio.sfx_volume'] ?? save.settings['audio.volume'] ?? '0.5');
+          phaserRef.current?.applyAudioSettings(save.settings['audio.muted'] === 'true', mv, sv);
           const stats = deriveHunterStats(
             { maxHp: hunterDefinition.baseMaxHp, attackDamage: hunterDefinition.baseAttackDamage },
             equipmentForLoadout(save.equipment_loadout),
@@ -154,9 +173,9 @@ export default function HuntScreen({
         triggerFlash('hit');
       }
     }
-    phaserRef.current?.applyEvents(events);
     const next = controller.getState();
     phaserRef.current?.applyState(next);
+    phaserRef.current?.applyEvents(events);
     phaserRef.current?.setEquipment(loadout);
     prevComboRef.current = state.combo;
     setState(next);
@@ -275,6 +294,7 @@ export default function HuntScreen({
   }, [state.status, controller]);
 
   useEffect(() => {
+    if (!isTauri()) return;
     let unlisten: (() => void) | undefined;
     void getCurrentWindow()
       .onCloseRequested(async (event) => {
@@ -326,6 +346,7 @@ export default function HuntScreen({
 
   function start() {
     phaserRef.current?.unlockAudio();
+    stopMenuMusic();
     controller.start();
     sync();
   }
@@ -427,6 +448,15 @@ export default function HuntScreen({
         <section className="panel">
           <p>Hunter level {profile?.hunter_level ?? hunterLevel}</p>
           <p>Type the displayed word to attack. React to the monster&apos;s attacks.</p>
+          <details className="hunt-help">
+            <summary>How to play</summary>
+            <ul>
+              <li>Type each letter of the word; a full word lands an attack.</li>
+              <li>When &quot;Defend!&quot; appears, type the defense word before the timer ends.</li>
+              <li>Break parts by completing break prompts for bonus materials.</li>
+              <li>Alt+Tab pauses the fight; press Resume to continue.</li>
+            </ul>
+          </details>
           <button type="button" className="btn btn--primary" onClick={start} disabled={!ready}>
             Start Hunt
           </button>

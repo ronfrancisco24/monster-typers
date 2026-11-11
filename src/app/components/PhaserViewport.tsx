@@ -11,7 +11,7 @@ export interface PhaserViewportHandle {
   playTypingError: () => void;
   unlockAudio: () => void;
   playUi: (key: 'hover' | 'select' | 'back' | 'confirm') => void;
-  applyAudioSettings: (muted: boolean, volume: number) => void;
+  applyAudioSettings: (muted: boolean, musicVolume: number, sfxVolume?: number) => void;
 }
 
 interface Props {
@@ -78,9 +78,9 @@ export const PhaserViewport = forwardRef<PhaserViewportHandle, Props>(
           const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
           scene?.playUi(key);
         },
-        applyAudioSettings: (muted, volume) => {
+        applyAudioSettings: (muted, musicVolume, sfxVolume) => {
           const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
-          scene?.applyAudioSettings(muted, volume);
+          scene?.applyAudioSettings(muted, musicVolume, sfxVolume);
         },
       }),
       [],
