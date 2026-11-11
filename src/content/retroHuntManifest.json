@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "logicalResolution": [
     720,
     405
@@ -1187,6 +1187,145 @@
   "notes": [
     "21 material names and 9 skill names are proposed IDs because the source prompt did not give exact game-data IDs.",
     "Frames are extracted and palette-normalized from generated concept art; review/retouch details in Aseprite for final production use.",
-    "All game-facing sprite canvases use exact specified dimensions and binary transparent RGBA."
-  ]
+    "All game-facing sprite canvases use exact specified dimensions and binary transparent RGBA.",
+    "Static hunter armor overlays are authored against the included hunter.default idle artwork; unlike rigged/animated armor, their silhouettes do not deform with attack/hit/defeat poses.",
+    "The hunter.default included in v1.0 uses green/brown cloth (not a blue under-suit); overlays preserve the existing base. If your HuntScene has a different blue 48x48 base, verify placement and adjust the artwork before integration."
+  ],
+  "hunterArmorOverlays": {
+    "hunter.overlay.head.equipment.moss_hood": {
+      "path": "sprites/hunter/hunter.overlay.head.equipment.moss_hood.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "slot": "head",
+      "equipmentId": "equipment.moss_hood",
+      "set": "moss",
+      "static": true
+    },
+    "hunter.overlay.chest.equipment.mossweave_vest": {
+      "path": "sprites/hunter/hunter.overlay.chest.equipment.mossweave_vest.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "slot": "chest",
+      "equipmentId": "equipment.mossweave_vest",
+      "set": "moss",
+      "static": true
+    },
+    "hunter.overlay.feet.equipment.moss_boots": {
+      "path": "sprites/hunter/hunter.overlay.feet.equipment.moss_boots.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "slot": "feet",
+      "equipmentId": "equipment.moss_boots",
+      "set": "moss",
+      "static": true
+    },
+    "hunter.overlay.head.equipment.crystal_helm": {
+      "path": "sprites/hunter/hunter.overlay.head.equipment.crystal_helm.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "slot": "head",
+      "equipmentId": "equipment.crystal_helm",
+      "set": "crystal",
+      "static": true
+    },
+    "hunter.overlay.chest.equipment.crystal_plate": {
+      "path": "sprites/hunter/hunter.overlay.chest.equipment.crystal_plate.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "slot": "chest",
+      "equipmentId": "equipment.crystal_plate",
+      "set": "crystal",
+      "static": true
+    },
+    "hunter.overlay.feet.equipment.crystal_greaves": {
+      "path": "sprites/hunter/hunter.overlay.feet.equipment.crystal_greaves.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "slot": "feet",
+      "equipmentId": "equipment.crystal_greaves",
+      "set": "crystal",
+      "static": true
+    },
+    "hunter.overlay.head.equipment.ashen_helm": {
+      "path": "sprites/hunter/hunter.overlay.head.equipment.ashen_helm.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "slot": "head",
+      "equipmentId": "equipment.ashen_helm",
+      "set": "ashen",
+      "static": true
+    },
+    "hunter.overlay.chest.equipment.ashen_plate": {
+      "path": "sprites/hunter/hunter.overlay.chest.equipment.ashen_plate.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "slot": "chest",
+      "equipmentId": "equipment.ashen_plate",
+      "set": "ashen",
+      "static": true
+    },
+    "hunter.overlay.feet.equipment.ashen_greaves": {
+      "path": "sprites/hunter/hunter.overlay.feet.equipment.ashen_greaves.png",
+      "size": [
+        48,
+        48
+      ],
+      "anchor": [
+        0.5,
+        1.0
+      ],
+      "slot": "feet",
+      "equipmentId": "equipment.ashen_greaves",
+      "set": "ashen",
+      "static": true
+    }
+  }
 }

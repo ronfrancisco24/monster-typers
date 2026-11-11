@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { loadGameSave, setEquipment } from '../../persistence/gameRepository';
 import type { GameSave } from '../../persistence/types';
-import { equipmentCatalog, equipmentForLoadout, equipmentName, equipmentSets, getEquipment, getSet } from '../../content/equipment';
+import { equipmentCatalog, equipmentForLoadout, equipmentName, equipmentSets, getEquipment, getSet, slotIconForSet } from '../../content/equipment';
 import { deriveHunterStats } from '../../game/domain/stats';
 import { equipItem, unequipSlot } from '../../game/domain/equipment';
 import { hunterDefinition } from '../../content/hunter';
@@ -110,9 +110,23 @@ export default function EquipmentScreen({ onReturnToHub }: Props) {
           const equipped = equippedId ? getEquipment(equippedId) : undefined;
           return (
             <div key={slot} className="equipment-slot">
+              <img
+                className="equipment-slot__icon"
+                src={`/sprites/ui/${slotIconForSet(equipped?.setId)}.png`}
+                alt=""
+                width={16}
+                height={16}
+              />
               <span className="equipment-slot__label">{slot.charAt(0).toUpperCase() + slot.slice(1)}</span>
               {equipped ? (
                 <>
+                  <img
+                    className="equipment-slot__item-icon"
+                    src={`/sprites/items/${equipped.id}.png`}
+                    alt=""
+                    width={24}
+                    height={24}
+                  />
                   <span className="equipment-slot__item">{equipped.name}</span>
                   <span className="equipment-slot__stats">{statText(equipped)}</span>
                   <button
@@ -169,7 +183,14 @@ export default function EquipmentScreen({ onReturnToHub }: Props) {
           const deltaRare = previewStats.rareDropChanceBonus - stats.rareDropChanceBonus;
           return (
             <div key={item.id} className="equipment-owned__row">
-              <div>
+              <div className="equipment-owned__info">
+                <img
+                  className="equipment-owned__icon"
+                  src={`/sprites/items/${item.id}.png`}
+                  alt=""
+                  width={24}
+                  height={24}
+                />
                 <span className="equipment-owned__name">{item.name}</span>
                 <span className="equipment-owned__slot">({item.slot})</span>
                 <span className="equipment-owned__stats">{statText(item)}</span>

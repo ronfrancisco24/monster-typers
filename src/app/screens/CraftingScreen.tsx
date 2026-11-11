@@ -90,6 +90,13 @@ export default function CraftingScreen({ onReturnToHub }: Props) {
           return (
             <div key={recipe.id} className="crafting-row">
               <div className="crafting-row__head">
+                <img
+                  className="crafting-row__icon"
+                  src={`/sprites/items/${recipe.equipmentId}.png`}
+                  alt=""
+                  width={24}
+                  height={24}
+                />
                 <span className="crafting-row__name">{equipmentName(recipe.equipmentId)}</span>
                 {getEquipment(recipe.equipmentId)?.setId && (
                   <span className="crafting-row__set">{setName(getEquipment(recipe.equipmentId)!.setId!)}</span>

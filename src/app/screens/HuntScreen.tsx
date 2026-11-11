@@ -70,6 +70,14 @@ export default function HuntScreen({
   const [skillRanks, setSkillRanks] = useState<Record<string, number>>({});
   const [loadout, setLoadout] = useState<Record<string, string>>({});
   const [ready, setReady] = useState(false);
+  const allowCloseRef = useRef(false);
+
+  useEffect(() => {
+    if (ready) {
+      phaserRef.current?.applyState(controller.getState());
+      phaserRef.current?.setEquipment(loadout);
+    }
+  }, [ready, controller, loadout]);
 
   useEffect(() => {
     loadGameSave()
@@ -148,6 +156,7 @@ export default function HuntScreen({
     phaserRef.current?.applyEvents(events);
     const next = controller.getState();
     phaserRef.current?.applyState(next);
+    phaserRef.current?.setEquipment(loadout);
     prevComboRef.current = state.combo;
     setState(next);
   };
@@ -268,12 +277,14 @@ export default function HuntScreen({
     let unlisten: (() => void) | undefined;
     void getCurrentWindow()
       .onCloseRequested(async (event) => {
+        if (allowCloseRef.current) return;
         if (controller.getState().status === 'active') {
           event.preventDefault();
           if (window.confirm('Abandon this hunt and close?')) {
+            allowCloseRef.current = true;
             controller.abandon();
             sync();
-            await getCurrentWindow().destroy();
+            await getCurrentWindow().close();
           }
         }
       })
@@ -348,7 +359,16 @@ export default function HuntScreen({
 
       <section className="hp-row">
         <div className="hp">
-          <div className="hp__label">Hunter</div>
+          <div className="hp__label">
+            Hunter
+            {Object.values(loadout).length > 0 && (
+              <span className="hp__gear">
+                {Object.values(loadout).map((id) => (
+                  <img key={id} src={`/sprites/items/${id}.png`} alt="" width={14} height={14} />
+                ))}
+              </span>
+            )}
+          </div>
           <div className="hp__bar" role="progressbar" aria-valuenow={state.playerHp} aria-valuemax={state.playerMaxHp}>
             <div className="hp__fill hp__fill--player" style={{ width: hpPercent(state.playerHp, state.playerMaxHp) }} />
           </div>

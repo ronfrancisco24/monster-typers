@@ -204,3 +204,15 @@ export function equipmentForLoadout(loadout: Record<string, string>): EquipmentD
 export function slotLabel(slot: 'head' | 'chest' | 'feet'): string {
   return slot.charAt(0).toUpperCase() + slot.slice(1);
 }
+
+export function slotIconForSet(setId: string | undefined): string {
+  if (setId === 'set.mossbound') return 'slot.forest';
+  if (setId === 'set.crystalbound') return 'slot.crystal';
+  if (setId === 'set.ashenbound') return 'slot.ashen';
+  return 'slot.common';
+}
+
+export function hasUiSprite(key: string): boolean {
+  // Best-effort: the manifest is loaded at runtime; this is a static hint.
+  return true;
+}

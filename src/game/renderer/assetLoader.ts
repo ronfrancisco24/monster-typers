@@ -11,6 +11,7 @@ type ManifestAnim = {
 
 type Manifest = {
   animations: Record<string, ManifestAnim>;
+  hunterArmorOverlays?: Record<string, { path: string; size: [number, number]; slot: string; equipmentId: string }>;
   icons: Record<string, { path: string; size: [number, number] }>;
   ui: Record<string, { path: string; size: [number, number]; nineSlice?: unknown }>;
   backgrounds: Record<string, { path: string; size: [number, number] }>;
@@ -29,6 +30,9 @@ export function preloadRetroHunt(scene: Phaser.Scene): void {
         frameHeight: anim.size[1],
       });
     }
+  }
+  for (const [id, overlay] of Object.entries(M.hunterArmorOverlays ?? {})) {
+    scene.load.image(id, (overlay as { path: string }).path);
   }
   for (const [id, icon] of Object.entries(M.icons)) scene.load.image(id, icon.path);
   for (const [id, ui] of Object.entries(M.ui)) scene.load.image(id, ui.path);
@@ -51,9 +55,12 @@ export function createRetroHuntAnimations(scene: Phaser.Scene): void {
   }
 }
 
+import { maps } from '../../content/maps';
+
 export function regionForMonster(monsterId: string): 'forest' | 'caverns' | 'ashen' {
-  if (monsterId.includes('crystal') || monsterId.includes('stalagmite') || monsterId.includes('gloom') || monsterId.includes('serpent') || monsterId.includes('bat')) return 'caverns';
-  if (monsterId.includes('ash') || monsterId.includes('obsidian') || monsterId.includes('ember') || monsterId.includes('wyvern') || monsterId.includes('wisp')) return 'ashen';
+  const map = maps.find((m) => m.monsterIds.includes(monsterId) || m.bossId === monsterId);
+  if (map?.id === 'map.crystal_caverns') return 'caverns';
+  if (map?.id === 'map.ashen_wastes') return 'ashen';
   return 'forest';
 }
 

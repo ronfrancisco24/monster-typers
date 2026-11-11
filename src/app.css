@@ -1,19 +1,61 @@
+@font-face {
+  font-family: 'Pixelify Sans';
+  src: url('/fonts/PixelifySans.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Tiny5';
+  src: url('/fonts/Tiny5.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
-  font-family: 'Segoe UI', system-ui, sans-serif;
-  --bg: #0f131a;
-  --panel: #1a202b;
-  --text: #e8ecf4;
-  --muted: #9aa4b2;
-  --accent: #7dd3fc;
-  --danger: #f87171;
-  --success: #4ade80;
-  --player: #38bdf8;
-  --monster: #f97316;
+  font-family: var(--font-main);
+  --font-main: "Pixelify Sans", sans-serif;
+  --font-hud: "Tiny5", monospace;
+
+  /* Core UI */
+  --bg: #161522;
+  --panel: #292837;
+  --border: #565561;
+
+  /* Typography */
+  --text: #f5e6c2;
+  --text-bright: #fff9eb;
+  --text-muted: #b9b3af;
+
+  /* Region accents */
+  --moss: #7ca34b;
+  --crystal: #6bb5d8;
+  --ash: #ef6b32;
+
+  /* Gameplay */
+  --hp: #c4473a;
+  --defense: #527dac;
+  --gold: #ffb04e;
+
+  /* Legacy aliases */
+  --panel-2: #403642;
+  --accent: #6bb5d8;
+  --danger: #c4473a;
+  --success: #accc61;
+  --player: #89dff5;
+  --monster: #ef6b32;
+  --muted: #b9b3af;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  font-size: 12px;
 }
 
 body {
@@ -48,8 +90,8 @@ body {
   justify-content: space-between;
   height: 1.9rem;
   padding: 0 0.6rem;
-  background: #141a24;
-  border-bottom: 1px solid #2a3342;
+  background: var(--panel);
+  border-bottom: 2px solid var(--border);
   user-select: none;
 }
 
@@ -71,13 +113,18 @@ body {
   color: var(--text);
   width: 2rem;
   height: 1.5rem;
-  border-radius: 0.3rem;
+  border-radius: 0;
   cursor: pointer;
   font-size: 0.85rem;
 }
 
 .titlebar__btn:hover {
   background: #242c3a;
+}
+
+.titlebar__btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
 }
 
 .titlebar__btn--active {
@@ -91,8 +138,8 @@ body {
 .phaser-viewport {
   width: 100%;
   height: 160px;
-  border: 1px solid #2a3342;
-  border-radius: 0.3rem;
+  border: 2px solid var(--border);
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -133,8 +180,8 @@ body {
 .hp__bar {
   height: 0.9rem;
   background: #0b0e14;
-  border: 1px solid #2a3342;
-  border-radius: 0.3rem;
+  border: 2px solid var(--border);
+  border-radius: 0;
   overflow: hidden;
 }
 
@@ -144,17 +191,29 @@ body {
 }
 
 .hp__fill--player {
-  background: linear-gradient(90deg, #0ea5e9, var(--player));
+  background: var(--player);
 }
 
 .hp__fill--monster {
-  background: linear-gradient(90deg, #ea580c, var(--monster));
+  background: var(--monster);
 }
 
 .hp__value {
-  font-size: 0.75rem;
+  font-family: var(--font-hud);
+  font-size: 0.85rem;
   color: var(--muted);
   margin-top: 0.2rem;
+}
+
+.hp__gear {
+  display: inline-flex;
+  gap: 0.2rem;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
+.hp__gear img {
+  image-rendering: pixelated;
 }
 
 .panel,
@@ -247,11 +306,11 @@ body {
 }
 
 .btn {
-  border: 1px solid #3a4456;
+  border: 2px solid var(--border);
   background: var(--panel);
   color: var(--text);
   padding: 0.45rem 1rem;
-  border-radius: 0.4rem;
+  border-radius: 0;
   font-size: 0.9rem;
   cursor: pointer;
 }
@@ -261,12 +320,20 @@ body {
 }
 
 .btn--primary {
-  background: #2563eb;
-  border-color: #2563eb;
+  background: var(--moss);
+  border-color: var(--moss);
+  color: var(--text-bright);
 }
 
 .btn--primary:hover {
-  background: #1d4ed8;
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--bg);
+}
+
+.btn--primary:active {
+  background: var(--gold);
+  border-color: var(--gold);
 }
 
 .overlay {
@@ -330,8 +397,8 @@ body {
   width: min(420px, 100%);
   padding: 1rem;
   background: var(--panel);
-  border: 1px solid #2a3342;
-  border-radius: 0.5rem;
+  border: 2px solid var(--border);
+  border-radius: 0;
 }
 
 .monster-card__header {
@@ -351,7 +418,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 0.2rem 0.5rem;
-  border-radius: 0.3rem;
+  border-radius: 0;
   background: #242c3a;
   color: var(--muted);
 }
@@ -410,7 +477,7 @@ body {
 .material-chip {
   font-size: 0.8rem;
   padding: 0.2rem 0.5rem;
-  border-radius: 0.3rem;
+  border-radius: 0;
   background: #242c3a;
   color: var(--text);
 }
@@ -428,7 +495,7 @@ body {
   justify-content: center;
   gap: 0.6rem;
   padding: 0.3rem 0.6rem;
-  border-radius: 0.3rem;
+  border-radius: 0;
   background: rgba(249, 115, 22, 0.18);
   border: 1px solid var(--monster);
 }
@@ -441,7 +508,7 @@ body {
 }
 
 .defense-banner__countdown {
-  font-family: 'Consolas', 'Courier New', monospace;
+  font-family: var(--font-hud);
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text);
@@ -449,7 +516,18 @@ body {
 .monster-list {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1rem;
+  width: 100%;
+}
+
+.map-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 460px;
 }
 
 .part-row {
@@ -457,7 +535,7 @@ body {
   align-items: center;
   gap: 0.6rem;
   padding: 0.3rem 0.6rem;
-  border-radius: 0.3rem;
+  border-radius: 0;
   background: rgba(168, 85, 247, 0.12);
   border: 1px solid rgba(168, 85, 247, 0.4);
 }
@@ -472,7 +550,7 @@ body {
 .part-row__bar {
   flex: 1;
   height: 0.5rem;
-  border-radius: 0.25rem;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.08);
   overflow: hidden;
 }
@@ -500,7 +578,7 @@ body {
   justify-content: center;
   gap: 0.6rem;
   padding: 0.3rem 0.6rem;
-  border-radius: 0.3rem;
+  border-radius: 0;
   background: rgba(168, 85, 247, 0.18);
   border: 1px solid #a855f7;
 }
@@ -550,9 +628,9 @@ body {
   width: 100%;
   max-width: 260px;
   padding: 0.5rem 0.6rem;
-  border-radius: 0.3rem;
+  border-radius: 0;
   background: rgba(255, 255, 255, 0.04);
-  border: 1px solid #2a3342;
+  border: 2px solid var(--border);
 }
 
 .results__row {
@@ -580,9 +658,9 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0.75rem;
-  border-radius: 0.3rem;
+  border-radius: 0;
   background: var(--panel);
-  border: 1px solid #2a3342;
+  border: 2px solid var(--border);
 }
 
 .inventory-row__name {
@@ -620,9 +698,9 @@ body {
 }
 .skill-card {
   padding: 0.75rem;
-  border-radius: 0.3rem;
+  border-radius: 0;
   background: var(--panel);
-  border: 1px solid #2a3342;
+  border: 2px solid var(--border);
   display: grid;
   gap: 0.35rem;
 }
@@ -674,7 +752,7 @@ body.reduced-effects .word--shake {
 
 .equipment-set {
   border: 1px solid var(--border, #2a3344);
-  border-radius: 0.5rem;
+  border-radius: 0;
   padding: 0.75rem 1rem;
   margin: 0.75rem 0;
 }
@@ -714,6 +792,256 @@ body.reduced-effects .word--shake {
   margin: 0.25rem 0 0.5rem;
   font-size: 0.8rem;
   color: var(--muted, #9aa4b2);
+}
+
+/* Centered, themed containers for Crafting / Equipment screens */
+.crafting-list {
+  display: grid;
+  gap: 0.75rem;
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.crafting-row {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  cursor: pointer;
+  transition: border-color 120ms steps(4), background 120ms steps(4);
+}
+
+.crafting-row:hover {
+  border-color: var(--accent);
+  background: var(--panel-2);
+}
+
+.crafting-row__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.crafting-row__name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.crafting-row__icon {
+  image-rendering: pixelated;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+}
+
+.crafting-row__owned {
+  font-size: 0.75rem;
+  color: var(--success);
+}
+
+.crafting-reqs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+}
+
+.crafting-reqs li.ok {
+  color: var(--success);
+}
+
+.crafting-reqs li.missing {
+  color: var(--danger);
+}
+
+.crafting-row__missing {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.equipment-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.equipment-slot {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  text-align: center;
+  min-height: 90px;
+}
+
+.equipment-slot__label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.equipment-slot__item {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.equipment-slot__stats {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.equipment-slot__empty {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.85rem;
+  align-self: center;
+}
+
+.equipment-totals,
+.equipment-owned,
+.equipment-set {
+  width: min(520px, 100%);
+  margin: 0.75rem auto;
+  padding: 0.75rem;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+}
+
+.equipment-totals h2,
+.equipment-owned h2,
+.equipment-set h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.equipment-totals p {
+  margin: 0.15rem 0;
+  font-size: 0.85rem;
+}
+
+.equipment-owned__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.equipment-owned__row:last-child {
+  border-bottom: none;
+}
+
+.equipment-owned__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.equipment-owned__info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.equipment-slot__icon,
+.equipment-slot__item-icon,
+.equipment-owned__icon {
+  image-rendering: pixelated;
+  flex: 0 0 auto;
+}
+
+.equipment-owned__slot {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-left: 0.35rem;
+}
+
+.equipment-owned__stats {
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: block;
+}
+
+.equipment-owned__preview {
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.skill-list {
+  display: grid;
+  gap: 0.75rem;
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.inventory-list {
+  display: grid;
+  gap: 0.5rem;
+  width: min(420px, 100%);
+  margin: 0 auto;
+}
+
+/* Hover + focus */
+.btn:hover,
+.monster-card:hover,
+.crafting-row:hover,
+.equipment-owned__row:hover {
+  cursor: pointer;
+}
+
+.btn:focus-visible,
+.monster-card:focus-visible,
+.crafting-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Color-independent feedback glyphs */
+.defense-banner__label::before {
+  content: '▶ ';
+}
+
+.break-banner__label::before {
+  content: '★ ';
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .word--shake {
+    animation: none;
+    transform: none;
+  }
+}
+
+body.reduced-effects .word--hit .char--done {
+  animation: none;
+  filter: none;
+}
+
+body.reduced-effects .word--shake {
+  animation: none;
+  transform: none;
 }
 
 .map-section {
@@ -760,7 +1088,7 @@ body.reduced-effects .word--shake {
 
 .equipment-set {
   border: 1px solid var(--border, #2a3344);
-  border-radius: 0.5rem;
+  border-radius: 0;
   padding: 0.75rem 1rem;
   margin: 0.75rem 0;
 }
@@ -800,6 +1128,256 @@ body.reduced-effects .word--shake {
   margin: 0.25rem 0 0.5rem;
   font-size: 0.8rem;
   color: var(--muted, #9aa4b2);
+}
+
+/* Centered, themed containers for Crafting / Equipment screens */
+.crafting-list {
+  display: grid;
+  gap: 0.75rem;
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.crafting-row {
+  display: grid;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  cursor: pointer;
+  transition: border-color 120ms steps(4), background 120ms steps(4);
+}
+
+.crafting-row:hover {
+  border-color: var(--accent);
+  background: var(--panel-2);
+}
+
+.crafting-row__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.crafting-row__name {
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.crafting-row__icon {
+  image-rendering: pixelated;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+}
+
+.crafting-row__owned {
+  font-size: 0.75rem;
+  color: var(--success);
+}
+
+.crafting-reqs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.15rem;
+  font-size: 0.85rem;
+}
+
+.crafting-reqs li.ok {
+  color: var(--success);
+}
+
+.crafting-reqs li.missing {
+  color: var(--danger);
+}
+
+.crafting-row__missing {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--danger);
+}
+
+.equipment-slots {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.equipment-slot {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.6rem;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+  text-align: center;
+  min-height: 90px;
+}
+
+.equipment-slot__label {
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.equipment-slot__item {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.equipment-slot__stats {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.equipment-slot__empty {
+  color: var(--muted);
+  font-style: italic;
+  font-size: 0.85rem;
+  align-self: center;
+}
+
+.equipment-totals,
+.equipment-owned,
+.equipment-set {
+  width: min(520px, 100%);
+  margin: 0.75rem auto;
+  padding: 0.75rem;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 0;
+}
+
+.equipment-totals h2,
+.equipment-owned h2,
+.equipment-set h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+
+.equipment-totals p {
+  margin: 0.15rem 0;
+  font-size: 0.85rem;
+}
+
+.equipment-owned__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.equipment-owned__row:last-child {
+  border-bottom: none;
+}
+
+.equipment-owned__name {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.equipment-owned__info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.equipment-slot__icon,
+.equipment-slot__item-icon,
+.equipment-owned__icon {
+  image-rendering: pixelated;
+  flex: 0 0 auto;
+}
+
+.equipment-owned__slot {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-left: 0.35rem;
+}
+
+.equipment-owned__stats {
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: block;
+}
+
+.equipment-owned__preview {
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.skill-list {
+  display: grid;
+  gap: 0.75rem;
+  width: min(520px, 100%);
+  margin: 0 auto;
+}
+
+.inventory-list {
+  display: grid;
+  gap: 0.5rem;
+  width: min(420px, 100%);
+  margin: 0 auto;
+}
+
+/* Hover + focus */
+.btn:hover,
+.monster-card:hover,
+.crafting-row:hover,
+.equipment-owned__row:hover {
+  cursor: pointer;
+}
+
+.btn:focus-visible,
+.monster-card:focus-visible,
+.crafting-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Color-independent feedback glyphs */
+.defense-banner__label::before {
+  content: '▶ ';
+}
+
+.break-banner__label::before {
+  content: '★ ';
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .word--shake {
+    animation: none;
+    transform: none;
+  }
+}
+
+body.reduced-effects .word--hit .char--done {
+  animation: none;
+  filter: none;
+}
+
+body.reduced-effects .word--shake {
+  animation: none;
+  transform: none;
 }
 
 .map-section {

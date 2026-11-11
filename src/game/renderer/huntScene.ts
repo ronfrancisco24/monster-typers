@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import type { HuntEvent, HuntState } from '../domain/types';
 import { preloadRetroHunt, createRetroHuntAnimations, regionForMonster } from './assetLoader';
+import { createArmorOverlayLayer, type ArmorOverlayLayer } from './armorOverlay';
 
 export class HuntScene extends Phaser.Scene {
   private ground!: Phaser.GameObjects.TileSprite;
@@ -9,6 +10,9 @@ export class HuntScene extends Phaser.Scene {
   private background!: Phaser.GameObjects.Image;
   private hitText!: Phaser.GameObjects.Text;
   private currentMonsterId: string | null = null;
+  private equipmentLoadout: Record<string, string> = {};
+  private armor: ArmorOverlayLayer | null = null;
+  private fullSetTint: number | null = null;
 
   constructor() {
     super('HuntScene');
@@ -19,6 +23,8 @@ export class HuntScene extends Phaser.Scene {
   }
 
   create(): void {
+    createRetroHuntAnimations(this);
+
     const { width, height } = this.scale;
 
     this.background = this.add.image(width / 2, height / 2, 'map.forest').setOrigin(0.5);
@@ -26,17 +32,16 @@ export class HuntScene extends Phaser.Scene {
 
     this.ground = this.add.tileSprite(width / 2, height - 8, width, 16, 'tile.forest.ground');
 
-    this.hunter = this.add.sprite(110, height - 70, 'hunter.default').setOrigin(0.5, 1);
-    this.hunter.play('hunter.default.idle');
+    this.hunter = this.add.sprite(110, height - 16, 'hunter.default').setOrigin(0.5, 1);
+    if (this.anims.exists('hunter.default.idle')) this.hunter.play('hunter.default.idle');
+    this.armor = createArmorOverlayLayer(this, this.hunter);
 
-    this.monster = this.add.sprite(width - 110, height - 70, 'monster.moss_slime').setOrigin(0.5, 1);
-    this.monster.play('monster.moss_slime.idle');
+    this.monster = this.add.sprite(width - 110, height - 16, 'monster.moss_slime').setOrigin(0.5, 1);
+    if (this.anims.exists('monster.moss_slime.idle')) this.monster.play('monster.moss_slime.idle');
 
     this.hitText = this.add
-      .text(width / 2, 48, '', { fontSize: '22px', color: '#ffffff', fontStyle: 'bold' })
+      .text(width / 2, 32, '', { fontFamily: 'Tiny5', fontSize: '22px', color: '#fff9eb', fontStyle: 'bold' })
       .setOrigin(0.5);
-
-    createRetroHuntAnimations(this);
   }
 
   private reducedEffects(): boolean {
@@ -138,7 +143,37 @@ export class HuntScene extends Phaser.Scene {
     }
   }
 
+  setEquipment(loadout: Record<string, string>): void {
+    this.equipmentLoadout = { ...loadout };
+    if (!this.hunter || !this.armor) return;
+    const items = Object.values(loadout);
+    const fullSet = this.detectFullSet(items);
+    this.fullSetTint = fullSet;
+    this.armor.setEquipment(loadout);
+    this.armor.sync(this.fullSetTint);
+    if (fullSet) {
+      this.hunter.setTint(fullSet);
+    } else {
+      this.hunter.clearTint();
+    }
+  }
+
+  private detectFullSet(items: string[]): number | null {
+    const has = (id: string) => items.includes(id);
+    if (has('equipment.moss_hood') && has('equipment.mossweave_vest') && has('equipment.moss_boots')) return 0x7ca34b;
+    if (has('equipment.crystal_helm') && has('equipment.crystal_plate') && has('equipment.crystal_greaves')) return 0x6bb5d8;
+    if (has('equipment.ashen_helm') && has('equipment.ashen_plate') && has('equipment.ashen_greaves')) return 0xef6b32;
+    return null;
+  }
+
+  override update(): void {
+    if (this.armor && this.hunter) {
+      this.armor.sync(this.fullSetTint);
+    }
+  }
+
   applyState(state: HuntState): void {
+    if (!this.hunter || !this.monster || !this.background) return;
     this.setMonster(state.monsterId);
     if (state.status === 'ready' || state.status === 'active') {
       if (state.prompt?.kind !== 'defense' && state.prompt?.kind !== 'break') {

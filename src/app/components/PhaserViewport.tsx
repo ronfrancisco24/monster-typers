@@ -6,6 +6,7 @@ import type { HuntEvent, HuntState } from '../../game/domain/types';
 export interface PhaserViewportHandle {
   applyEvents: (events: HuntEvent[]) => void;
   applyState: (state: HuntState) => void;
+  setEquipment: (loadout: Record<string, string>) => void;
 }
 
 interface Props {
@@ -51,6 +52,10 @@ export const PhaserViewport = forwardRef<PhaserViewportHandle, Props>(
         applyState: (state) => {
           const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
           scene?.applyState(state);
+        },
+        setEquipment: (loadout) => {
+          const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
+          scene?.setEquipment(loadout);
         },
       }),
       [],
