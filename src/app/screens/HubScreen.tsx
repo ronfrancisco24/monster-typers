@@ -6,6 +6,7 @@ import type { MonsterDefinition } from '../../game/domain/types';
 import { loadGameSave, reconcileProgression, unlockMap } from '../../persistence/gameRepository';
 import type { PlayerProfile } from '../../persistence/types';
 import { levelFromXp, xpProgressInLevel, xpToNextLevel } from '../../game/domain/progression';
+import { playMusic, playUi } from '../../platform/uiAudio';
 
 interface Props {
   onStartHunt: (monster: MonsterDefinition) => void;
@@ -23,6 +24,18 @@ export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, 
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [unlockedMaps, setUnlockedMaps] = useState<string[]>(['map.verdant_forest']);
   const [defeatedMonsters, setDefeatedMonsters] = useState<string[]>([]);
+
+  useEffect(() => {
+    let started = false;
+    const startMusic = () => {
+      if (started) return;
+      started = true;
+      playMusic('bgm.menu_hearth');
+      document.removeEventListener('click', startMusic);
+    };
+    document.addEventListener('click', startMusic);
+    return () => document.removeEventListener('click', startMusic);
+  }, []);
 
   useEffect(() => {
     loadGameSave()
@@ -60,16 +73,16 @@ export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, 
             <span>Skill points: {profile.unspent_skill_points + Math.max(0, levelFromXp(profile.total_xp) - profile.hunter_level)}</span>
           </div>
         )}
-        <button type="button" className="btn" onClick={onOpenInventory}>
+        <button type="button" className="btn" onClick={() => { playUi('select'); onOpenInventory(); }}>
           Inventory
         </button>
-        <button type="button" className="btn" onClick={onOpenSkills}>
+        <button type="button" className="btn" onClick={() => { playUi('select'); onOpenSkills(); }}>
           Skills
         </button>
-        <button type="button" className="btn" onClick={onOpenCrafting}>
+        <button type="button" className="btn" onClick={() => { playUi('select'); onOpenCrafting(); }}>
           Crafting
         </button>
-        <button type="button" className="btn" onClick={onOpenEquipment}>
+        <button type="button" className="btn" onClick={() => { playUi('select'); onOpenEquipment(); }}>
           Equipment
         </button>
       </header>
@@ -118,7 +131,7 @@ export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, 
                             )}
                           </div>
                         </div>
-                        <button type="button" className="btn btn--primary monster-card__start" onClick={() => onStartHunt(monster)}>
+                        <button type="button" className="btn btn--primary monster-card__start" onClick={() => { playUi('confirm'); onStartHunt(monster); }}>
                           Start Hunt
                         </button>
                       </article>
@@ -158,7 +171,7 @@ export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, 
                             ))}
                           </div>
                         </div>
-                        <button type="button" className="btn btn--primary monster-card__start" onClick={() => onStartHunt(boss)}>
+                        <button type="button" className="btn btn--primary monster-card__start" onClick={() => { playUi('confirm'); onStartHunt(boss); }}>
                           Start Hunt
                         </button>
                       </article>

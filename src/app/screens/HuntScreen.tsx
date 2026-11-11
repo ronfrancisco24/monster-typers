@@ -89,6 +89,7 @@ export default function HuntScreen({
           setProfile(p);
           setSkillRanks(save.skill_ranks);
           setLoadout(save.equipment_loadout);
+          phaserRef.current?.applyAudioSettings(save.settings['audio.muted'] === 'true', parseFloat(save.settings['audio.volume'] ?? '0.5'));
           const stats = deriveHunterStats(
             { maxHp: hunterDefinition.baseMaxHp, attackDamage: hunterDefinition.baseAttackDamage },
             equipmentForLoadout(save.equipment_loadout),
@@ -300,11 +301,31 @@ export default function HuntScreen({
     if (event.ctrlKey || event.metaKey || event.altKey) return;
     if (event.key.length !== 1) return;
     event.preventDefault();
+    const before = controller.getState();
+    const prompt = before.prompt;
+    const isDefense = prompt?.kind === 'defense';
+    const isBreak = prompt?.kind === 'break';
+    const expected = prompt ? prompt.word.charAt(prompt.cursor).toLowerCase() : '';
+    const typed = event.key.toLowerCase();
+    const isCorrectChar = expected !== '' && typed === expected;
+    const completesWord = isCorrectChar && prompt !== null && prompt.cursor === prompt.word.length - 1;
+
     controller.typeCharacter(event.key);
     sync();
+
+    if (before.status === 'active' && prompt) {
+      if (!isCorrectChar) {
+        phaserRef.current?.playTypingError();
+      } else if (completesWord) {
+        // word_complete is played in the PLAYER_ATTACK event handler
+      } else {
+        phaserRef.current?.playTypingCorrect();
+      }
+    }
   }
 
   function start() {
+    phaserRef.current?.unlockAudio();
     controller.start();
     sync();
   }

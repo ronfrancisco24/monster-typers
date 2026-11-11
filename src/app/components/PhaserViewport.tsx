@@ -7,6 +7,11 @@ export interface PhaserViewportHandle {
   applyEvents: (events: HuntEvent[]) => void;
   applyState: (state: HuntState) => void;
   setEquipment: (loadout: Record<string, string>) => void;
+  playTypingCorrect: () => void;
+  playTypingError: () => void;
+  unlockAudio: () => void;
+  playUi: (key: 'hover' | 'select' | 'back' | 'confirm') => void;
+  applyAudioSettings: (muted: boolean, volume: number) => void;
 }
 
 interface Props {
@@ -56,6 +61,26 @@ export const PhaserViewport = forwardRef<PhaserViewportHandle, Props>(
         setEquipment: (loadout) => {
           const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
           scene?.setEquipment(loadout);
+        },
+        playTypingCorrect: () => {
+          const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
+          scene?.playTypingCorrect();
+        },
+        playTypingError: () => {
+          const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
+          scene?.playTypingError();
+        },
+        unlockAudio: () => {
+          const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
+          scene?.unlockAudio();
+        },
+        playUi: (key) => {
+          const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
+          scene?.playUi(key);
+        },
+        applyAudioSettings: (muted, volume) => {
+          const scene = gameRef.current?.scene.getScene('HuntScene') as HuntScene | undefined;
+          scene?.applyAudioSettings(muted, volume);
         },
       }),
       [],

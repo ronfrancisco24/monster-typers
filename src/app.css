@@ -135,6 +135,13 @@ body {
   background: #dc2626;
 }
 
+.titlebar__volume {
+  width: 60px;
+  height: 1.2rem;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
 .phaser-viewport {
   width: 100%;
   height: 160px;
@@ -231,7 +238,7 @@ body {
 }
 
 .word {
-  font-family: 'Consolas', 'Courier New', monospace;
+  font-family: var(--font-hud);
   font-size: 2.2rem;
   letter-spacing: 0.25rem;
   display: flex;
@@ -501,6 +508,7 @@ body {
 }
 
 .defense-banner__label {
+  font-family: var(--font-hud);
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -584,6 +592,7 @@ body {
 }
 
 .break-banner__label {
+  font-family: var(--font-hud);
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 0.12em;

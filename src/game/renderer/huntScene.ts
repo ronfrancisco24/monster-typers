@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import type { HuntEvent, HuntState } from '../domain/types';
 import { preloadRetroHunt, createRetroHuntAnimations, regionForMonster } from './assetLoader';
 import { createArmorOverlayLayer, type ArmorOverlayLayer } from './armorOverlay';
+import { RetroAudioManager } from '../audio/audioManager';
+import { preloadRetroHuntAudio } from '../audio/audioMap';
 
 export class HuntScene extends Phaser.Scene {
   private ground!: Phaser.GameObjects.TileSprite;
@@ -13,6 +15,7 @@ export class HuntScene extends Phaser.Scene {
   private equipmentLoadout: Record<string, string> = {};
   private armor: ArmorOverlayLayer | null = null;
   private fullSetTint: number | null = null;
+  private audio: RetroAudioManager | null = null;
 
   constructor() {
     super('HuntScene');
@@ -20,6 +23,7 @@ export class HuntScene extends Phaser.Scene {
 
   preload(): void {
     preloadRetroHunt(this);
+    preloadRetroHuntAudio(this);
   }
 
   create(): void {
@@ -35,6 +39,12 @@ export class HuntScene extends Phaser.Scene {
     this.hunter = this.add.sprite(110, height - 16, 'hunter.default').setOrigin(0.5, 1);
     if (this.anims.exists('hunter.default.idle')) this.hunter.play('hunter.default.idle');
     this.armor = createArmorOverlayLayer(this, this.hunter);
+
+    const audio = (this.game.registry.get('audio') as RetroAudioManager | undefined) ?? new RetroAudioManager(this);
+    audio.useScene(this);
+    this.game.registry.set('audio', audio);
+    this.audio = audio;
+    (window as { __retroAudio?: RetroAudioManager }).__retroAudio = audio;
 
     this.monster = this.add.sprite(width - 110, height - 16, 'monster.moss_slime').setOrigin(0.5, 1);
     if (this.anims.exists('monster.moss_slime.idle')) this.monster.play('monster.moss_slime.idle');
@@ -67,9 +77,57 @@ export class HuntScene extends Phaser.Scene {
     }
   }
 
+  playTypingCorrect(): void {
+    this.audio?.playTypingCorrect();
+  }
+
+  playTypingError(): void {
+    this.audio?.playTypingError();
+  }
+
+  playUi(key: 'hover' | 'select' | 'back' | 'confirm'): void {
+    this.audio?.playUi(key);
+  }
+
+  applyAudioSettings(muted: boolean, volume: number): void {
+    if (!this.audio) return;
+    this.audio.setMuted(muted);
+    this.audio.setMusicVolume(volume);
+    this.audio.setSfxVolume(volume);
+  }
+
+  unlockAudio(): void {
+    this.audio?.unlockFromGesture();
+  }
+
   applyEvents(events: HuntEvent[]): void {
     for (const event of events) {
-      if (event.type === 'PLAYER_ATTACK') {
+      if (event.type === 'HUNT_STARTED') {
+        this.audio?.unlockFromGesture();
+        if (this.currentMonsterId) {
+          const isBoss = this.currentMonsterId.includes('guardian') || this.currentMonsterId.includes('serpent') || this.currentMonsterId.includes('wyvern');
+          if (isBoss) this.audio?.playMonsterRoar(this.currentMonsterId);
+        }
+        const region = this.currentMonsterId ? regionForMonster(this.currentMonsterId) : 'forest';
+        if (region === 'forest') this.audio?.playMusicForRegion('forest');
+        else if (region === 'caverns') this.audio?.playMusicForRegion('caverns');
+        else this.audio?.playMusicForRegion('ashen');
+        this.audio?.playProgression('hunt_start');
+      } else if (event.type === 'PLAYER_ATTACK') {
+        this.audio?.play('sfx.combat.swing_light', { cooldownMs: 60 });
+        this.audio?.playWordComplete();
+        if (event.flawless) this.audio?.play('sfx.combat.critical_hit');
+        else this.audio?.play('sfx.combat.hit_light');
+        if (this.textures.exists('hunter.default.attack') && this.anims.exists('hunter.default.attack')) {
+          this.hunter.setTexture('hunter.default.attack');
+          this.hunter.play('hunter.default.attack');
+          this.time.delayedCall(420, () => {
+            if (this.hunter.active && this.textures.exists('hunter.default')) {
+              this.hunter.setTexture('hunter.default');
+              if (this.anims.exists('hunter.default.idle')) this.hunter.play('hunter.default.idle');
+            }
+          });
+        }
         this.tweens.add({
           targets: this.hunter,
           x: this.hunter.x + 70,
@@ -84,12 +142,25 @@ export class HuntScene extends Phaser.Scene {
           yoyo: true,
           repeat: 1,
         });
-        if (this.anims.exists(`${this.currentMonsterId}.hit`)) {
-          this.monster.play(`${this.currentMonsterId}.hit`);
+        if (this.currentMonsterId) {
+          const hitKey = `${this.currentMonsterId}.hit`;
+          if (this.textures.exists(hitKey) && this.anims.exists(hitKey)) {
+            this.monster.setTexture(hitKey);
+            this.monster.play(hitKey);
+            this.time.delayedCall(260, () => {
+              if (this.monster.active && this.currentMonsterId && this.textures.exists(this.currentMonsterId)) {
+                this.monster.setTexture(this.currentMonsterId);
+                const idleKey = `${this.currentMonsterId}.idle`;
+                if (this.anims.exists(idleKey)) this.monster.play(idleKey);
+              }
+            });
+          }
         }
         this.hitText.setText(`-${event.damage}`);
         this.time.delayedCall(700, () => this.hitText.setText(''));
       } else if (event.type === 'MONSTER_ATTACK') {
+        if (this.currentMonsterId) this.audio?.playMonsterAttack(this.currentMonsterId);
+        this.audio?.play('sfx.combat.player_hurt');
         this.tweens.add({
           targets: this.monster,
           x: this.monster.x - 70,
@@ -107,15 +178,18 @@ export class HuntScene extends Phaser.Scene {
         this.hitText.setText(`-${event.damage}`);
         this.time.delayedCall(700, () => this.hitText.setText(''));
       } else if (event.type === 'MISTYPE') {
+        this.audio?.playTypingError();
         if (!this.reducedEffects()) {
           this.cameras.main.shake(140, 0.006);
         }
       } else if (event.type === 'DEFENSE_STARTED') {
+        this.audio?.playDefenseReady();
         if (this.anims.exists(`${this.currentMonsterId}.attack`)) {
           this.monster.play(`${this.currentMonsterId}.attack`);
         }
         this.hitText.setText('Defend!');
       } else if (event.type === 'DEFENSE_SUCCESS') {
+        this.audio?.play('sfx.combat.block');
         this.hitText.setText('Blocked');
         this.time.delayedCall(700, () => this.hitText.setText(''));
       } else if (event.type === 'BREAK_STARTED') {
@@ -127,18 +201,29 @@ export class HuntScene extends Phaser.Scene {
         this.hitText.setText('Hit!');
         this.time.delayedCall(400, () => this.hitText.setText(''));
       } else if (event.type === 'PART_BROKEN') {
+        this.audio?.play('sfx.combat.part_break');
         this.hitText.setText('Broken');
         this.time.delayedCall(900, () => this.hitText.setText(''));
       } else if (event.type === 'VICTORY') {
+        if (this.currentMonsterId && (this.currentMonsterId.includes('guardian') || this.currentMonsterId.includes('serpent') || this.currentMonsterId.includes('wyvern'))) {
+          this.audio?.playMonsterDefeat(this.currentMonsterId);
+        }
+        this.audio?.playProgression('hunt_victory');
+        this.audio?.playVictoryMusic();
         if (this.anims.exists(`${this.currentMonsterId}.defeat`)) {
           this.monster.play(`${this.currentMonsterId}.defeat`);
         }
         this.hitText.setText('Victory');
       } else if (event.type === 'DEFEAT') {
+        this.audio?.playProgression('hunt_failed');
         if (this.anims.exists('hunter.default.defeat')) {
           this.hunter.play('hunter.default.defeat');
         }
         this.hitText.setText('Defeat');
+      } else if (event.type === 'PAUSED') {
+        this.audio?.stopMusic(0);
+      } else if (event.type === 'RESUMED') {
+        // music stays stopped during pause; resume not auto-restarted to avoid restart spam
       }
     }
   }
@@ -146,16 +231,9 @@ export class HuntScene extends Phaser.Scene {
   setEquipment(loadout: Record<string, string>): void {
     this.equipmentLoadout = { ...loadout };
     if (!this.hunter || !this.armor) return;
-    const items = Object.values(loadout);
-    const fullSet = this.detectFullSet(items);
-    this.fullSetTint = fullSet;
     this.armor.setEquipment(loadout);
-    this.armor.sync(this.fullSetTint);
-    if (fullSet) {
-      this.hunter.setTint(fullSet);
-    } else {
-      this.hunter.clearTint();
-    }
+    this.armor.sync(null);
+    this.hunter.clearTint();
   }
 
   private detectFullSet(items: string[]): number | null {
@@ -177,7 +255,13 @@ export class HuntScene extends Phaser.Scene {
     this.setMonster(state.monsterId);
     if (state.status === 'ready' || state.status === 'active') {
       if (state.prompt?.kind !== 'defense' && state.prompt?.kind !== 'break') {
+        if (this.textures.exists('hunter.default') && this.hunter.texture.key !== 'hunter.default') {
+          this.hunter.setTexture('hunter.default');
+        }
         if (this.anims.exists('hunter.default.idle')) this.hunter.play('hunter.default.idle');
+        if (this.currentMonsterId && this.textures.exists(this.currentMonsterId) && this.monster.texture.key !== this.currentMonsterId) {
+          this.monster.setTexture(this.currentMonsterId);
+        }
         const idleKey = `${this.currentMonsterId}.idle`;
         if (this.currentMonsterId && this.anims.exists(idleKey)) this.monster.play(idleKey);
       }
