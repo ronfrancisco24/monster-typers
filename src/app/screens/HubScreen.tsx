@@ -1,48 +1,116 @@
 import { useEffect, useState } from 'react';
-import { maps } from '../../content/maps';
+import { maps, type MapDefinition } from '../../content/maps';
 import { getMonster } from '../../content/monsters';
 import { materialName } from '../../content/materials';
 import type { MonsterDefinition } from '../../game/domain/types';
-import { loadGameSave, reconcileProgression, unlockMap } from '../../persistence/gameRepository';
+import { loadGameSave, reconcileProgression } from '../../persistence/gameRepository';
 import type { PlayerProfile } from '../../persistence/types';
-import { levelFromXp, xpProgressInLevel, xpToNextLevel } from '../../game/domain/progression';
-import { playMusic, playUi } from '../../platform/uiAudio';
+import { levelFromXp, xpProgressInLevel } from '../../game/domain/progression';
+import { playUi } from '../../platform/uiAudio';
+import MaterialIcon from '../components/MaterialIcon';
+import ScreenShell from '../components/ScreenShell';
 
 interface Props {
   onStartHunt: (monster: MonsterDefinition) => void;
-  onOpenInventory: () => void;
-  onOpenSkills: () => void;
-  onOpenCrafting: () => void;
-  onOpenEquipment: () => void;
 }
 
-function materialLabel(id: string): string {
-  return materialName(id);
+function regionClass(mapId: string): string {
+  if (mapId === 'map.crystal_caverns') return 'crystal';
+  if (mapId === 'map.ashen_wastes') return 'ash';
+  return 'forest';
 }
 
-export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, onOpenCrafting, onOpenEquipment }: Props) {
+function unlockRequirementText(map: MapDefinition): string {
+  if (map.unlockRequirement.type === 'boss') {
+    return `Defeat ${getMonster(map.unlockRequirement.bossId)?.name ?? 'the previous boss'} to unlock.`;
+  }
+  return '';
+}
+
+function MonsterTile({
+  monster,
+  boss,
+  locked,
+  onStart,
+}: {
+  monster: MonsterDefinition;
+  boss: boolean;
+  locked: boolean;
+  onStart: () => void;
+}) {
+  const drops = monster.drops?.map((drop) => drop.materialId) ?? [];
+  const difficulty = boss ? 'hard' : (monster.difficulty ?? 'easy');
+
+  return (
+    <article className={`monster-tile${boss ? ' monster-tile--boss' : ''}${locked ? ' monster-tile--locked' : ''}`}>
+      <div className="monster-tile__top">
+        <img
+          className="monster-tile__sprite"
+          src={`/sprites/${boss ? 'bosses' : 'monsters'}/${monster.id}.idle.00.png`}
+          alt=""
+          width={48}
+          height={48}
+        />
+        <div className="monster-tile__id">
+          <h3 className="monster-tile__name">{monster.name}</h3>
+          <span className={`difficulty difficulty--${difficulty}`}>{boss ? 'boss' : difficulty}</span>
+        </div>
+      </div>
+
+      {locked ? (
+        <p className="monster-tile__note">Defeat all 3 standard monsters in this region to unlock.</p>
+      ) : (
+        <>
+          <div className="monster-tile__stats">
+            <span className="stat-chip">
+              <span>HP</span> {monster.hp}
+            </span>
+            <span className="stat-chip">
+              <span>ATK</span> {monster.attackDamage}
+            </span>
+            <span className="stat-chip">
+              <span>CD</span> {(monster.attackCadenceMs / 1000).toFixed(1)}s
+            </span>
+          </div>
+          <div
+            className="monster-tile__drops"
+            role="img"
+            aria-label={drops.length === 0 ? 'No drops' : `Drops: ${drops.map(materialName).join(', ')}`}
+          >
+            {drops.length === 0 ? (
+              <span className="monster-tile__nodrops">No drops</span>
+            ) : (
+              drops.map((materialId) => (
+                <MaterialIcon key={materialId} id={materialId} title={materialName(materialId)} />
+              ))
+            )}
+          </div>
+        </>
+      )}
+
+      <button
+        type="button"
+        className="btn btn--primary monster-tile__start"
+        disabled={locked}
+        onClick={() => {
+          if (locked) return;
+          playUi('confirm');
+          onStart();
+        }}
+      >
+        {locked ? 'Locked' : 'Start Hunt'}
+      </button>
+    </article>
+  );
+}
+
+export default function HubScreen({ onStartHunt }: Props) {
   const [profile, setProfile] = useState<PlayerProfile | null>(null);
   const [unlockedMaps, setUnlockedMaps] = useState<string[]>(['map.verdant_forest']);
   const [defeatedMonsters, setDefeatedMonsters] = useState<string[]>([]);
-
-  useEffect(() => {
-    // Try to start immediately (may be blocked until a gesture).
-    playMusic('bgm.menu_hearth');
-    let started = false;
-    const startMusic = () => {
-      if (started) return;
-      started = true;
-      playMusic('bgm.menu_hearth');
-      document.removeEventListener('pointerdown', startMusic);
-      document.removeEventListener('keydown', startMusic);
-    };
-    document.addEventListener('pointerdown', startMusic);
-    document.addEventListener('keydown', startMusic);
-    return () => {
-      document.removeEventListener('pointerdown', startMusic);
-      document.removeEventListener('keydown', startMusic);
-    };
-  }, []);
+  const [selectedMapId, setSelectedMapId] = useState('map.verdant_forest');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadGameSave()
@@ -59,140 +127,133 @@ export default function HubScreen({ onStartHunt, onOpenInventory, onOpenSkills, 
         } else {
           setProfile(save.profile);
         }
-        setUnlockedMaps(save.unlocked_maps && save.unlocked_maps.length ? save.unlocked_maps : ['map.verdant_forest']);
-        setDefeatedMonsters(save.defeated_monsters ?? []);
+        const unlocked = save.unlocked_maps.length > 0 ? save.unlocked_maps : ['map.verdant_forest'];
+        setUnlockedMaps(unlocked);
+        setSelectedMapId((current) => (unlocked.includes(current) ? current : (unlocked[0] ?? 'map.verdant_forest')));
+        setDefeatedMonsters(save.defeated_monsters);
       })
-      .catch(() => {});
+      .catch((err) => setError(String(err)))
+      .finally(() => setLoading(false));
   }, []);
 
-  const progress = profile ? xpProgressInLevel(profile.total_xp) : null;
+  if (loading) {
+    return (
+      <ScreenShell title="Monsters" subtitle="Choose a hunt.">
+        <p className="empty-state">Loading…</p>
+      </ScreenShell>
+    );
+  }
+
+  if (error !== null) {
+    return (
+      <ScreenShell title="Monsters" subtitle="Choose a hunt.">
+        <p className="alert">{error}</p>
+      </ScreenShell>
+    );
+  }
+
+  const activeMap = maps.find((map) => map.id === selectedMapId) ?? maps[0]!;
+  const standardMonsters = activeMap.monsterIds
+    .map((id) => getMonster(id))
+    .filter((monster): monster is MonsterDefinition => monster !== undefined);
+  const boss = getMonster(activeMap.bossId);
+  const regionDefeated = activeMap.monsterIds.filter((id) => defeatedMonsters.includes(id)).length;
+  const bossUnlocked = regionDefeated === activeMap.monsterIds.length;
+  const bossDefeated = defeatedMonsters.includes(activeMap.bossId);
+
+  const level = profile === null ? null : levelFromXp(profile.total_xp);
+  const progress = profile === null ? null : xpProgressInLevel(profile.total_xp);
+  const points =
+    profile === null ? 0 : profile.unspent_skill_points + Math.max(0, (level ?? profile.hunter_level) - profile.hunter_level);
+  const xpPercent =
+    progress === null ? 0 : progress.needed === 0 ? 100 : Math.min(100, (progress.current / progress.needed) * 100);
+  const xpLabel = progress === null ? '—' : progress.needed === 0 ? 'MAX' : `${progress.current}/${progress.needed} XP`;
+
+  const meta = profile === null ? null : (
+    <div className="hunter-meta">
+      <span className="hunter-meta__level">Lv {level}</span>
+      <span
+        className="xp-bar"
+        role="progressbar"
+        aria-label="Experience"
+        aria-valuemin={0}
+        aria-valuemax={progress === null || progress.needed === 0 ? 1 : progress.needed}
+        aria-valuenow={progress?.current ?? 0}
+      >
+        <span className="xp-bar__fill" style={{ width: `${xpPercent}%` }} />
+      </span>
+      <span className="hunter-meta__xp">{xpLabel}</span>
+      <span className="hunter-meta__points">{points} SP</span>
+    </div>
+  );
 
   return (
-    <section className="hub">
-      <header className="hub__header">
-        <h1 className="hub__title">Hunt Board</h1>
-        <p className="hub__subtitle">Hunt Board</p>
-        {profile && (
-          <div className="hub__profile">
-            <span>Level {levelFromXp(profile.total_xp)}</span>
-            <span>XP {progress?.current ?? 0}/{progress?.needed ?? 0}</span>
-            <span>Next in {xpToNextLevel(profile.total_xp)}</span>
-            <span>Skill points: {profile.unspent_skill_points + Math.max(0, levelFromXp(profile.total_xp) - profile.hunter_level)}</span>
-          </div>
-        )}
-        <button type="button" className="btn" onClick={() => { playUi('select'); onOpenInventory(); }}>
-          Inventory
-        </button>
-        <button type="button" className="btn" onClick={() => { playUi('select'); onOpenSkills(); }}>
-          Skills
-        </button>
-        <button type="button" className="btn" onClick={() => { playUi('select'); onOpenCrafting(); }}>
-          Crafting
-        </button>
-        <button type="button" className="btn" onClick={() => { playUi('select'); onOpenEquipment(); }}>
-          Equipment
-        </button>
-        <button type="button" className="btn" onClick={() => { playMusic('bgm.menu_hearth'); playUi('confirm'); }}>
-          Test Audio
-        </button>
-      </header>
+    <ScreenShell title="Monsters" subtitle={activeMap.description} meta={meta}>
+      <div className="monsters-layout">
+        <aside className="region-rail" aria-label="Regions">
+          {maps.map((map) => {
+            const unlocked = unlockedMaps.includes(map.id);
+            const done = map.monsterIds.filter((id) => defeatedMonsters.includes(id)).length;
+            const total = map.monsterIds.length;
+            const selected = map.id === activeMap.id;
+            return (
+              <button
+                key={map.id}
+                type="button"
+                className={`region-btn region-btn--${regionClass(map.id)}${selected ? ' region-btn--active' : ''}`}
+                aria-pressed={selected}
+                disabled={!unlocked}
+                title={unlocked ? map.description : `Locked — ${unlockRequirementText(map)}`}
+                onClick={() => {
+                  if (!selected) {
+                    playUi('select');
+                    setSelectedMapId(map.id);
+                  }
+                }}
+              >
+                <span className="region-btn__name">{map.name}</span>
+                <span className="region-btn__meta">{unlocked ? `${done}/${total} felled` : 'Locked'}</span>
+                <span className="region-btn__bar" aria-hidden="true">
+                  <span
+                    className="region-btn__fill"
+                    style={{ width: `${total === 0 ? 0 : (done / total) * 100}%` }}
+                  />
+                </span>
+              </button>
+            );
+          })}
+        </aside>
 
-      <div className="monster-list">
-        {maps.map((map) => {
-          const unlocked = unlockedMaps.includes(map.id);
-          const mapMonsters = map.monsterIds
-            .map((id) => getMonster(id))
-            .filter((m): m is MonsterDefinition => m !== undefined);
-          const boss = getMonster(map.bossId);
-          return (
-            <section key={map.id} className="map-section">
-              <h2 className="map-section__title">{map.name}</h2>
-              {!unlocked && (
-                <p className="map-section__locked">
-                  Locked — defeat {map.unlockRequirement.type === 'boss' ? getMonster(map.unlockRequirement.bossId)?.name ?? 'the boss' : 'the previous boss'} to unlock.
-                </p>
-              )}
-              {unlocked && (
-                <>
-                  {mapMonsters.map((monster) => {
-                    const materials = monster.drops?.map((drop) => drop.materialId) ?? [];
-                    return (
-                      <article key={monster.id} className="monster-card">
-                        <div className="monster-card__header">
-                          <h2 className="monster-card__name">{monster.name}</h2>
-                          <span className={`difficulty difficulty--${monster.difficulty ?? 'easy'}`}>
-                            {monster.difficulty ?? 'easy'}
-                          </span>
-                        </div>
-                        <dl className="monster-card__stats">
-                          <div><dt>Health</dt><dd>{monster.hp}</dd></div>
-                          <div><dt>Attack</dt><dd>{monster.attackDamage}</dd></div>
-                          <div><dt>Cadence</dt><dd>{monster.attackCadenceMs / 1000}s</dd></div>
-                        </dl>
-                        <div className="monster-card__materials">
-                          <span className="monster-card__materials-label">Possible materials</span>
-                          <div className="material-chips">
-                            {materials.length === 0 ? (
-                              <span className="material-chip material-chip--empty">None</span>
-                            ) : (
-                              materials.map((materialId) => (
-                                <span key={materialId} className="material-chip">{materialLabel(materialId)}</span>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                        <button type="button" className="btn btn--primary monster-card__start" onClick={() => { playUi('confirm'); onStartHunt(monster); }}>
-                          Start Hunt
-                        </button>
-                      </article>
-                    );
-                  })}
-                  {boss && (() => {
-                    const bossUnlocked = map.monsterIds.every((id) => defeatedMonsters.includes(id));
-                    if (!bossUnlocked) {
-                      return (
-                        <article key={boss.id} className="monster-card monster-card--boss monster-card--locked">
-                          <div className="monster-card__header">
-                            <h2 className="monster-card__name">{boss.name}</h2>
-                            <span className="difficulty difficulty--hard">boss</span>
-                          </div>
-                          <p className="map-section__locked">
-                            Defeat all 3 standard monsters in this region to unlock.
-                          </p>
-                        </article>
-                      );
-                    }
-                    return (
-                      <article key={boss.id} className="monster-card monster-card--boss">
-                        <div className="monster-card__header">
-                          <h2 className="monster-card__name">{boss.name}</h2>
-                          <span className="difficulty difficulty--hard">boss</span>
-                        </div>
-                        <dl className="monster-card__stats">
-                          <div><dt>Health</dt><dd>{boss.hp}</dd></div>
-                          <div><dt>Attack</dt><dd>{boss.attackDamage}</dd></div>
-                          <div><dt>Cadence</dt><dd>{boss.attackCadenceMs / 1000}s</dd></div>
-                        </dl>
-                        <div className="monster-card__materials">
-                          <span className="monster-card__materials-label">Possible materials</span>
-                          <div className="material-chips">
-                            {(boss.drops?.map((d) => d.materialId) ?? []).map((materialId) => (
-                              <span key={materialId} className="material-chip">{materialLabel(materialId)}</span>
-                            ))}
-                          </div>
-                        </div>
-                        <button type="button" className="btn btn--primary monster-card__start" onClick={() => { playUi('confirm'); onStartHunt(boss); }}>
-                          Start Hunt
-                        </button>
-                      </article>
-                    );
-                  })()}
-                </>
-              )}
-            </section>
-          );
-        })}
+        <div className="region-panel">
+          <div className="region-panel__head">
+            <h2 className="region-panel__name">{activeMap.name}</h2>
+            <span className="region-panel__progress">
+              {regionDefeated}/{activeMap.monsterIds.length} ·{' '}
+              {bossDefeated ? 'boss felled' : bossUnlocked ? 'boss ready' : 'boss locked'}
+            </span>
+          </div>
+          <div className="monster-grid">
+            {standardMonsters.map((monster) => (
+              <MonsterTile
+                key={monster.id}
+                monster={monster}
+                boss={false}
+                locked={false}
+                onStart={() => onStartHunt(monster)}
+              />
+            ))}
+            {boss !== undefined && (
+              <MonsterTile
+                key={boss.id}
+                monster={boss}
+                boss
+                locked={!bossUnlocked}
+                onStart={() => onStartHunt(boss)}
+              />
+            )}
+          </div>
+        </div>
       </div>
-    </section>
+    </ScreenShell>
   );
 }

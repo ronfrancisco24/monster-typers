@@ -57,7 +57,7 @@ A stable Windows build with compact idle mode, expanded hunt/menu mode, focus-sa
 - [ ] All nine armor recipes and nine skills work.
 - [ ] Standard hunts hit the intended short-session range.
 - [ ] Bosses have functional phase changes and distinct drops.
-- [ ] Player can craft, equip, level, purchase upgrades, and persist progress.
+- [x] Player can craft, equip, level, purchase upgrades, and persist progress.
 - [ ] Duplicate settlement never produces duplicate rewards.
 - [ ] Focus loss during an attack never causes hidden damage.
 - [ ] Settings and preferred window behavior persist across restarts.

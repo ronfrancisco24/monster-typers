@@ -16,6 +16,7 @@ import { levelFromXp } from '../../game/domain/progression';
 import { deriveHunterStats } from '../../game/domain/stats';
 import { stopMusic as stopMenuMusic } from '../../platform/uiAudio';
 import type { DerivedHunterStats } from '../../game/domain/stats';
+import HowToPlayList from '../components/HowToPlay';
 
 type Flash = 'hit' | 'miss' | 'monster' | null;
 
@@ -450,12 +451,7 @@ export default function HuntScreen({
           <p>Type the displayed word to attack. React to the monster&apos;s attacks.</p>
           <details className="hunt-help">
             <summary>How to play</summary>
-            <ul>
-              <li>Type each letter of the word; a full word lands an attack.</li>
-              <li>When &quot;Defend!&quot; appears, type the defense word before the timer ends.</li>
-              <li>Break parts by completing break prompts for bonus materials.</li>
-              <li>Alt+Tab pauses the fight; press Resume to continue.</li>
-            </ul>
+            <HowToPlayList />
           </details>
           <button type="button" className="btn btn--primary" onClick={start} disabled={!ready}>
             Start Hunt
@@ -579,7 +575,7 @@ export default function HuntScreen({
             </button>
             {onReturnToHub && (
               <button type="button" className="btn" onClick={onReturnToHub}>
-                Return to Hub
+                Return to Monsters
               </button>
             )}
           </div>
@@ -608,7 +604,7 @@ export default function HuntScreen({
             </button>
             {onReturnToHub && (
               <button type="button" className="btn" onClick={onReturnToHub}>
-                Return to Hub
+                Return to Monsters
               </button>
             )}
           </div>
@@ -625,7 +621,7 @@ export default function HuntScreen({
             </button>
             {onReturnToHub && (
               <button type="button" className="btn" onClick={onReturnToHub}>
-                Return to Hub
+                Return to Monsters
               </button>
             )}
           </div>

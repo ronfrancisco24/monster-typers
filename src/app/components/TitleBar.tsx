@@ -172,6 +172,8 @@ export default function TitleBar() {
             step={0.05}
             value={sfxVolume}
             onChange={(e) => void handleSfxVolume(e)}
+            onPointerUp={() => playUi('select')}
+            onKeyUp={() => playUi('select')}
             aria-label="SFX volume"
             className="titlebar__volume"
           />

@@ -40,13 +40,19 @@ function getAudio(key: string): HTMLAudioElement {
 let muted = false;
 let musicVolume = 0.7;
 let sfxVolume = 0.7;
+let musicBaseVolume = 0.4;
+let currentMusic: HTMLAudioElement | null = null;
+let currentMusicKey: string | null = null;
 
 export function setUiMuted(value: boolean): void {
   muted = value;
+  // Applies immediately to the looping menu track instead of only the next one.
+  for (const a of cache.values()) a.muted = value;
 }
 
 export function setUiMusicVolume(value: number): void {
   musicVolume = Math.max(0, Math.min(1, value));
+  if (currentMusic) currentMusic.volume = musicBaseVolume * musicVolume;
 }
 
 export function setUiSfxVolume(value: number): void {
@@ -57,6 +63,7 @@ export function setUiVolume(value: number): void {
   const v = Math.max(0, Math.min(1, value));
   musicVolume = v;
   sfxVolume = v;
+  if (currentMusic) currentMusic.volume = musicBaseVolume * v;
 }
 
 export function playUi(key: UiKey): void {
@@ -71,11 +78,7 @@ export function playUi(key: UiKey): void {
   else a.addEventListener('canplaythrough', attempt, { once: true });
 }
 
-let currentMusic: HTMLAudioElement | null = null;
-let currentMusicKey: string | null = null;
-
 export function playMusic(key: MusicKey): void {
-  if (muted) return;
   if (currentMusicKey === key && currentMusic && !currentMusic.paused) return;
   if (currentMusic) {
     currentMusic.pause();
@@ -83,6 +86,8 @@ export function playMusic(key: MusicKey): void {
   }
   const a = getAudio(key);
   const recommended = key === 'bgm.hunt_victory' ? 0.45 : 0.4;
+  musicBaseVolume = recommended;
+  a.muted = muted;
   a.volume = recommended * musicVolume;
   a.loop = key !== 'bgm.hunt_victory';
   a.currentTime = 0;
