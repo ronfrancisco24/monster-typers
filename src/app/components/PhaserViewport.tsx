@@ -44,6 +44,8 @@ export const PhaserViewport = forwardRef<PhaserViewportHandle, Props>(
       return () => {
         game.destroy(true);
         gameRef.current = null;
+        // Drop the stale manager so titlebar audio calls stop touching a destroyed scene.
+        delete (window as { __retroAudio?: unknown }).__retroAudio;
       };
     }, [width, height]);
 

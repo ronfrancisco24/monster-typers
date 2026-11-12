@@ -1,27 +1,37 @@
 import { useCallback, useEffect, useState } from 'react';
 import { craftEquipment, loadGameSave } from '../../persistence/gameRepository';
 import type { GameSave } from '../../persistence/types';
-import { equipmentName, getRecipe, recipes, getEquipment, setName } from '../../content/equipment';
+import { equipmentName, getEquipment, getRecipe, recipes, setName } from '../../content/equipment';
 import { materialSources } from '../../content/monsters';
-import {
-  canCraft,
-  missingMaterials,
-  ownedQuantity,
-} from '../../game/domain/equipment';
+import { canCraft, missingMaterials, ownedQuantity } from '../../game/domain/equipment';
 import { materialName } from '../../content/materials';
+import MaterialIcon from '../components/MaterialIcon';
+import ScreenShell from '../components/ScreenShell';
 
-interface Props {
-  onReturnToHub: () => void;
+function sourceText(materialId: string): string {
+  return (
+    materialSources(materialId)
+      .map((source) =>
+        source.kind === 'break'
+          ? `break the part on ${source.monsterName}`
+          : `${source.monsterName}: ${
+              source.minQuantity === source.maxQuantity
+                ? source.minQuantity
+                : `${source.minQuantity}–${source.maxQuantity}`
+            } per win (${source.chance >= 1 ? 'guaranteed' : `~${Math.round(source.chance * 100)}%`})`,
+      )
+      .join('; ') || 'no known source'
+  );
 }
 
-export default function CraftingScreen({ onReturnToHub }: Props) {
+export default function CraftingScreen() {
   const [save, setSave] = useState<GameSave | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const load = useCallback(() => {
     loadGameSave()
-      .then((s) => setSave(s))
+      .then((nextSave) => setSave(nextSave))
       .catch((err) => setError(String(err)));
   }, []);
 
@@ -29,127 +39,119 @@ export default function CraftingScreen({ onReturnToHub }: Props) {
     load();
   }, [load]);
 
-  const handleCraft = async (recipeId: string) => {
+  async function handleCraft(recipeId: string) {
     const recipe = getRecipe(recipeId);
-    if (!recipe || !save) return;
+    if (recipe === undefined || save === null) return;
     setBusy(recipeId);
     setError(null);
     try {
       const result = await craftEquipment({
         equipment_id: recipe.equipmentId,
-        requirements: recipe.requirements.map((r) => ({
-          material_id: r.materialId,
-          quantity: r.quantity,
+        requirements: recipe.requirements.map((requirement) => ({
+          material_id: requirement.materialId,
+          quantity: requirement.quantity,
         })),
       });
-      setSave((prev) =>
-        prev
-          ? { ...prev, inventory: result.inventory, owned_equipment: result.owned }
-          : prev,
+      setSave((current) =>
+        current === null ? current : { ...current, inventory: result.inventory, owned_equipment: result.owned },
       );
     } catch (err) {
       setError(String(err));
     } finally {
       setBusy(null);
     }
-  };
+  }
 
   if (save === null) {
     return (
-      <section className="hub">
-        <header className="hub__header">
-          <h1 className="hub__title">Crafting</h1>
-        </header>
-        {error !== null && <p className="results__empty">{error}</p>}
-        {error === null && <p className="results__empty">Loading…</p>}
-        <button type="button" className="btn" onClick={onReturnToHub}>
-          Back to Hub
-        </button>
-      </section>
+      <ScreenShell title="Crafting" subtitle="Turn gathered materials into armor.">
+        {error === null ? <p className="empty-state">Loading…</p> : <p className="alert">{error}</p>}
+      </ScreenShell>
     );
   }
 
   const ownedSet = new Set(save.owned_equipment);
   const inventory = save.inventory;
+  const craftableCount = recipes.filter((recipe) => canCraft(recipe, inventory, ownedSet)).length;
 
   return (
-    <section className="hub">
-      <header className="hub__header">
-        <h1 className="hub__title">Crafting</h1>
-        <p className="hub__subtitle">Turn gathered materials into armor.</p>
-      </header>
+    <ScreenShell
+      title="Crafting"
+      subtitle="Turn gathered materials into armor."
+      meta={<span className="meta-chip">{craftableCount} craftable</span>}
+    >
+      {error !== null && <p className="alert">{error}</p>}
 
-      {error !== null && <p className="results__empty">{error}</p>}
-
-      <div className="crafting-list">
+      <div className="recipe-grid">
         {recipes.map((recipe) => {
           const owned = ownedSet.has(recipe.equipmentId);
           const craftable = canCraft(recipe, inventory, ownedSet);
           const missing = missingMaterials(recipe, inventory);
           const isBusy = busy === recipe.id;
+          const setId = getEquipment(recipe.equipmentId)?.setId;
           return (
-            <div key={recipe.id} className="crafting-row">
-              <div className="crafting-row__head">
+            <article
+              key={recipe.id}
+              className={`recipe-card${owned ? ' recipe-card--owned' : ''}${
+                craftable ? ' recipe-card--craftable' : ''
+              }`}
+            >
+              <div className="recipe-card__head">
                 <img
-                  className="crafting-row__icon"
+                  className="recipe-card__icon"
                   src={`/sprites/items/${recipe.equipmentId}.png`}
                   alt=""
-                  width={24}
-                  height={24}
+                  width={32}
+                  height={32}
                 />
-                <span className="crafting-row__name">{equipmentName(recipe.equipmentId)}</span>
-                {getEquipment(recipe.equipmentId)?.setId && (
-                  <span className="crafting-row__set">{setName(getEquipment(recipe.equipmentId)!.setId!)}</span>
-                )}
-                {owned && <span className="crafting-row__owned">Crafted</span>}
+                <div className="recipe-card__id">
+                  <h3 className="recipe-card__name">{equipmentName(recipe.equipmentId)}</h3>
+                  {setId !== undefined && <span className="recipe-card__set">{setName(setId)}</span>}
+                </div>
+                {owned && <span className="badge">Crafted</span>}
               </div>
-              <ul className="crafting-reqs">
-                {recipe.requirements.map((r) => {
-                  const have = ownedQuantity(inventory, r.materialId);
+
+              <ul className="recipe-reqs">
+                {recipe.requirements.map((requirement) => {
+                  const have = ownedQuantity(inventory, requirement.materialId);
+                  const ok = have >= requirement.quantity;
                   return (
-                    <li key={r.materialId} className={have >= r.quantity ? 'ok' : 'missing'}>
-                      {materialName(r.materialId)}: {have}/{r.quantity}
+                    <li key={requirement.materialId} className={ok ? 'ok' : 'missing'}>
+                      <MaterialIcon id={requirement.materialId} size={16} />
+                      <span className="recipe-reqs__name">{materialName(requirement.materialId)}</span>
+                      <span className="recipe-reqs__count">
+                        {ok ? '✓' : '✗'} {have}/{requirement.quantity}
+                      </span>
                     </li>
                   );
                 })}
               </ul>
+
               {!owned && missing.length > 0 && (
-                <>
-                  <p className="crafting-row__missing">
-                    Missing: {missing.map((m) => `${materialName(m.materialId)} x${m.quantity}`).join(', ')}
-                  </p>
-                  <ul className="crafting-row__sources">
-                    {missing.map((m) => (
-                      <li key={m.materialId}>
-                        {materialName(m.materialId)} —{' '}
-                        {materialSources(m.materialId)
-                          .map((src) =>
-                            src.kind === 'break'
-                              ? `break the part on ${src.monsterName}`
-                              : `${src.monsterName}: ${src.minQuantity === src.maxQuantity ? src.minQuantity : `${src.minQuantity}–${src.maxQuantity}`} per win (${src.chance >= 1 ? 'guaranteed' : `~${Math.round(src.chance * 100)}%`})`,
-                          )
-                          .join('; ') || 'no known source'}
+                <details className="recipe-sources">
+                  <summary>Where to find</summary>
+                  <ul>
+                    {missing.map((material) => (
+                      <li key={material.materialId}>
+                        {materialName(material.materialId)}: {sourceText(material.materialId)}
                       </li>
                     ))}
                   </ul>
-                </>
+                </details>
               )}
+
               <button
                 type="button"
-                className="btn btn--primary"
+                className="btn btn--primary recipe-card__craft"
                 disabled={!craftable || isBusy}
                 onClick={() => void handleCraft(recipe.id)}
               >
                 {isBusy ? 'Crafting…' : owned ? 'Already crafted' : 'Craft'}
               </button>
-            </div>
+            </article>
           );
         })}
       </div>
-
-      <button type="button" className="btn" onClick={onReturnToHub}>
-        Back to Hub
-      </button>
-    </section>
+    </ScreenShell>
   );
 }
